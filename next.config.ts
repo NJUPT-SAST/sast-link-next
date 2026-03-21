@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
   // See https://nextjs.org/docs/messages/export-image-api for different workarounds.
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "sast-link-1309205610.cos.ap-shanghai.myqcloud.com",
+      },
+    ],
   },
   // Configure assetPrefix or else the server won't properly resolve your assets.
   assetPrefix: isProd ? undefined : `http://${internalHost}:3000`,
