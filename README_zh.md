@@ -1,475 +1,234 @@
-# React Quick Starter
+# SAST Link Next
 
-一个现代化的全栈启动模板，结合了用于 Web 应用的 **Next.js 16** 和 **React 19**，以及用于跨平台桌面应用的 **Tauri 2.9**。使用 TypeScript、Tailwind CSS v4 和 shadcn/ui 组件构建。
+这是 SAST Link 账户系统当前的 Next.js + Tauri 实现仓库。它已经不是一个通用 starter 模板，而是包含了已迁移的登录、注册、重置密码、账号切换、主页、资料编辑、头像裁剪上传、桌面打包、Jest 测试和 GitHub Actions 工作流的实际业务项目。
 
 [English Documentation](./README.md)
 
-## 特性
+## 项目当前能力
 
-- ⚡️ **Next.js 16** 配合 App Router 和 React 19
-- 🖥️ **Tauri 2.9** 用于原生桌面应用（Windows、macOS、Linux）
-- 🎨 **Tailwind CSS v4** 支持 CSS 变量和暗色模式
-- 🧩 **shadcn/ui** 组件库，基于 Radix UI 原语
-- 📦 **Zustand** 轻量级状态管理
-- 🔤 **Geist 字体** 通过 next/font 优化
-- 🎯 **TypeScript** 提供类型安全
-- 🎭 **Lucide Icons** 精美的图标库
-- 📱 双重部署：从同一代码库部署 Web 应用或桌面应用
+- 提供游客侧登录、注册、重置密码和 OAuth 回调流程。
+- 提供用户侧主页概览、资料侧边栏、资料编辑、头像裁剪上传和安全设置入口。
+- 同一套代码同时支持 Web 运行时和 Tauri 桌面运行时。
+- 通过 Next.js 静态导出生成 `out/`，供 Tauri 生产构建加载。
+- 默认通过 `NEXT_PUBLIC_API_BASE_URL` 访问现有 SAST Link 后端，必要时可通过 MSW 进行本地 mock。
 
-## 前置要求
+## 技术栈
 
-在开始之前，请确保已安装以下内容：
+- Next.js 16 App Router
+- React 19
+- TypeScript 严格模式
+- Tailwind CSS v4
+- shadcn/ui + Radix
+- Zustand
+- SWR
+- Axios
+- React Hook Form
+- Jest 30 + Testing Library + MSW
+- Tauri 2
 
-### Web 开发所需
+## 当前产品路由
 
-- **Node.js** 20.x 或更高版本（[下载](https://nodejs.org/)）
-- **pnpm** 8.x 或更高版本（推荐）或 npm/yarn
+### 游客路由
 
-  ```bash
-  npm install -g pnpm
-  ```
+- `/` 账号切换与快速登录入口
+- `/login` 两步登录流程
+- `/register` 四步注册流程
+- `/reset` 四步密码重置流程
+- `/callback/feishu` 飞书 OAuth 回调
+- `/callback/github` GitHub OAuth 回调
 
-### 桌面开发所需（额外要求）
+### 登录后路由
 
-- **Rust** 1.70 或更高版本（[安装](https://www.rust-lang.org/tools/install)）
+- `/home` 主页概览、快捷操作和常用应用入口
+- `/home/edit` 资料编辑与头像裁剪上传
+- `/home/edit/safety` 安全设置页
 
-  ```bash
-  # 验证安装
-  rustc --version
-  cargo --version
-  ```
+### 布局与鉴权
 
-- **系统依赖**（因操作系统而异）：
-  - **Windows**：Microsoft Visual Studio C++ 生成工具
-  - **macOS**：Xcode 命令行工具
-  - **Linux**：参见 [Tauri 前置要求](https://tauri.app/v1/guides/getting-started/prerequisites)
+- `app/(tourist)/layout.tsx` 为未登录页面提供统一背景布局。
+- `app/(user)/layout.tsx` 在本地没有 token 时跳转到 `/login`。
+- `app/(user)/home/layout.tsx` 负责拉取资料并组合顶部栏与侧边面板。
 
-## 安装
+## 目录结构
 
-1. **克隆仓库**
+```text
+sast-link-next/
+├── app/                         # App Router 路由、布局、providers、页面测试
+│   ├── page.tsx                 # 根页账号切换入口
+│   ├── providers.tsx            # SWR 配置、MSW 启动、全局消息面板
+│   ├── (tourist)/               # 登录 / 注册 / 重置密码 / OAuth 回调
+│   └── (user)/                  # 登录后主页与编辑流程
+├── components/
+│   ├── account/                 # 账号切换 UI
+│   ├── animation/               # 页面动效
+│   ├── auth/                    # 认证复用组件
+│   ├── feedback/                # 全局消息面板
+│   ├── icons/                   # Logo 与品牌图标
+│   ├── layout/                  # 背景、页脚、顶部栏
+│   ├── navigation/              # 返回按钮
+│   ├── profile/                 # 资料绑定项
+│   └── ui/                      # 基础 UI 组件
+├── hooks/
+│   └── use-fetch-profile.ts     # 获取并同步当前用户资料
+├── lib/
+│   ├── api/                     # Axios client 与 auth/user/oauth API 封装
+│   ├── constants/               # 常量
+│   ├── validations/             # 表单校验规则
+│   ├── token.ts                 # token 持久化
+│   └── message.ts               # 全局提示封装
+├── mocks/                       # NEXT_PUBLIC_API_MOCKING=true 时启用的 MSW
+├── public/                      # 静态资源和 MSW worker
+├── src-tauri/                   # Tauri 桌面壳与构建配置
+├── store/                       # Zustand stores
+├── tests/                       # 共享测试辅助文件 / 更高层测试
+├── .github/workflows/           # CI/CD、测试、部署、发布、Tauri 构建工作流
+├── TESTING.md                   # 测试说明
+├── CI_CD.md                     # GitHub Actions 说明
+└── CONTRIBUTING.md              # 协作贡献说明
+```
 
-   ```bash
-   git clone <your-repo-url>
-   cd react-quick-starter
-   ```
+## 关键运行时模块
 
-2. **安装依赖**
+### Zustand 状态
 
-   ```bash
-   pnpm install
-   # 或
-   npm install
-   # 或
-   yarn install
-   ```
+- `store/use-auth-store.ts`：当前登录用户、login ticket、redirect、logout。
+- `store/use-user-list-store.ts`：根页记住的账号列表与切换逻辑。
+- `store/use-user-profile-store.ts`：主页与编辑页共享的用户资料。
+- `store/use-panel-store.ts`：主页侧边面板开关状态。
 
-3. **验证安装**
+### API 封装
 
-   ```bash
-   # 检查 Next.js 是否就绪
-   pnpm dev
-   
-   # 检查 Tauri 是否就绪（可选，用于桌面开发）
-   pnpm tauri info
-   ```
+- `lib/api/client.ts`：读取 `NEXT_PUBLIC_API_BASE_URL`，并自动附带 `Token` 请求头。
+- `lib/api/auth.ts`：账号校验、邮件发送、验证码校验、注册、重置密码、OAuth 回调。
+- `lib/api/user.ts`：登录、登出、资料获取/修改、头像上传、绑定状态查询。
 
-## 开发
+### 桌面集成
 
-### Web 应用开发
+- `next.config.ts` 使用 `output: "export"`，使 `pnpm build` 生成 `out/`。
+- `src-tauri/tauri.conf.json` 将 `frontendDist` 指向 `../out`，并在 Tauri 命令前自动执行 `pnpm dev` / `pnpm build`。
+- `src-tauri/src/lib.rs` 在 debug 模式启用 `tauri-plugin-log`。
 
-#### 启动开发服务器
+## 开发前置要求
+
+### 所有开发都需要
+
+- Node.js 20 或更高版本
+- pnpm，建议与 CI 对齐使用 pnpm 10
+
+### 桌面开发额外需要
+
+- Rust toolchain
+- Tauri 平台依赖
+  - Windows：Visual Studio C++ Build Tools 与可用的 WebView2 环境
+  - macOS：Xcode Command Line Tools
+  - Linux：与 `.github/workflows/build-tauri.yml` 中一致的 WebKitGTK 等依赖
+
+## 安装与环境变量
+
+```bash
+pnpm install
+```
+
+本地环境变量示例：
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://118.25.23.101:8081/api/v1
+NEXT_PUBLIC_API_MOCKING=false
+```
+
+说明：
+
+- `.env*` 已被 `.gitignore` 忽略。
+- 将 `NEXT_PUBLIC_API_MOCKING=true` 后，`app/providers.tsx` 会动态初始化 MSW。
+- 当前 `.env.example` 只记录了这两个公开变量。
+
+## 常用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm dev` | 启动 Next.js Web 开发服务器 |
+| `pnpm build` | 生成供 Tauri 生产环境使用的静态导出 |
+| `pnpm start` | 启动 Next.js 生产服务器 |
+| `pnpm lint` | 运行 ESLint |
+| `pnpm test` | 运行 Jest 测试 |
+| `pnpm test:watch` | 监听模式运行 Jest |
+| `pnpm test:coverage` | 生成覆盖率报告 |
+| `pnpm tauri dev` | 启动桌面开发模式 |
+| `pnpm tauri build` | 构建桌面安装包 / Bundle |
+| `pnpm tauri info` | 检查本机 Tauri 环境 |
+
+## 推荐本地流程
+
+### 只做 Web 开发
 
 ```bash
 pnpm dev
-# 或
-npm run dev
 ```
 
-这将在 [http://localhost:3000](http://localhost:3000) 启动 Next.js 开发服务器。当您编辑文件时，页面会自动重新加载。
+然后重点验证：
 
-#### 关键开发文件
+- `/`
+- `/login`
+- `/register`
+- `/reset`
+- `/home`
 
-- `app/page.tsx` - 主着陆页
-- `app/layout.tsx` - 根布局及全局配置
-- `app/globals.css` - 全局样式和 Tailwind 配置
-- `components/ui/` - 可复用的 UI 组件（shadcn/ui）
-- `lib/utils.ts` - 工具函数
-
-### 桌面应用开发
-
-#### 启动 Tauri 开发模式
+### 做桌面开发
 
 ```bash
 pnpm tauri dev
 ```
 
-此命令将：
+这个命令会先启动 Next.js，再打开 Tauri 桌面窗口。
 
-1. 启动 Next.js 开发服务器
-2. 启动 Tauri 桌面应用
-3. 为前端和 Rust 代码启用热重载
-
-#### Tauri 开发文件
-
-- `src-tauri/src/main.rs` - Rust 应用主入口点
-- `src-tauri/src/lib.rs` - Rust 库代码
-- `src-tauri/tauri.conf.json` - Tauri 配置
-- `src-tauri/Cargo.toml` - Rust 依赖
-
-## 可用脚本
-
-### 前端脚本
-
-| 命令 | 描述 |
-|------|------|
-| `pnpm dev` | 在 3000 端口启动 Next.js 开发服务器 |
-| `pnpm build` | 构建生产环境的 Next.js 应用（输出到 `out/` 目录） |
-| `pnpm start` | 启动 Next.js 生产服务器（在 `pnpm build` 之后） |
-| `pnpm lint` | 运行 ESLint 检查代码质量 |
-| `pnpm lint --fix` | 自动修复 ESLint 问题 |
-
-### Tauri（桌面）脚本
-
-| 命令 | 描述 |
-|------|------|
-| `pnpm tauri dev` | 启动 Tauri 开发模式，支持热重载 |
-| `pnpm tauri build` | 构建生产环境的桌面应用 |
-| `pnpm tauri info` | 显示 Tauri 环境信息 |
-| `pnpm tauri icon` | 从源图像生成应用图标 |
-| `pnpm tauri --help` | 显示所有可用的 Tauri 命令 |
-
-### 添加 UI 组件（shadcn/ui）
+### 提交前验证
 
 ```bash
-# 添加新组件（例如 Card）
-pnpm dlx shadcn@latest add card
-
-# 添加多个组件
-pnpm dlx shadcn@latest add button card dialog
-```
-
-## 项目结构
-
-```
-react-quick-starter/
-├── app/                      # Next.js App Router
-│   ├── layout.tsx           # 根布局，包含字体和元数据
-│   ├── page.tsx             # 主着陆页
-│   ├── globals.css          # 全局样式和 Tailwind 配置
-│   └── favicon.ico          # 应用图标
-├── components/              # React 组件
-│   └── ui/                  # shadcn/ui 组件（Button 等）
-├── lib/                     # 工具函数
-│   └── utils.ts            # 辅助函数（cn 等）
-├── public/                  # 静态资源（图片、SVG）
-├── src-tauri/              # Tauri 桌面应用
-│   ├── src/
-│   │   ├── main.rs         # Rust 主入口点
-│   │   └── lib.rs          # Rust 库代码
-│   ├── icons/              # 桌面应用图标
-│   ├── tauri.conf.json     # Tauri 配置
-│   └── Cargo.toml          # Rust 依赖
-├── components.json          # shadcn/ui 配置
-├── next.config.ts          # Next.js 配置
-├── tailwind.config.ts      # Tailwind CSS 配置
-├── tsconfig.json           # TypeScript 配置
-├── eslint.config.mjs       # ESLint 配置
-└── package.json            # Node.js 依赖和脚本
-```
-
-## 配置
-
-### 环境变量
-
-在根目录创建 `.env.local` 文件以配置特定环境的变量：
-
-```env
-# 示例环境变量
-NEXT_PUBLIC_API_URL=https://api.example.com
-NEXT_PUBLIC_APP_NAME=React Quick Starter
-
-# 私有变量（不会暴露给浏览器）
-DATABASE_URL=postgresql://...
-API_SECRET_KEY=your-secret-key
-```
-
-**重要提示**：
-
-- 只有以 `NEXT_PUBLIC_` 为前缀的变量会暴露给浏览器
-- 切勿将 `.env.local` 提交到版本控制
-- 使用 `.env.example` 记录所需的变量
-
-### Tauri 配置
-
-编辑 `src-tauri/tauri.conf.json` 以自定义您的桌面应用：
-
-```json
-{
-  "productName": "react-quick-starter",    // 应用名称
-  "version": "0.1.0",                      // 应用版本
-  "identifier": "com.reactquickstarter.desktop", // 唯一应用标识符
-  "build": {
-    "frontendDist": "../out",              // Next.js 构建输出
-    "devUrl": "http://localhost:3000"      // 开发服务器 URL
-  },
-  "app": {
-    "windows": [{
-      "title": "react-quick-starter",      // 窗口标题
-      "width": 800,                        // 默认宽度
-      "height": 600,                       // 默认高度
-      "resizable": true,                   // 允许调整大小
-      "fullscreen": false                  // 全屏启动
-    }]
-  }
-}
-```
-
-### 路径别名
-
-在 `components.json` 和 `tsconfig.json` 中配置：
-
-```typescript
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-```
-
-可用别名：
-
-- `@/components` → `components/`
-- `@/lib` → `lib/`
-- `@/ui` → `components/ui/`
-- `@/hooks` → `hooks/`
-- `@/utils` → `lib/utils.ts`
-
-### Tailwind CSS 配置
-
-项目使用 Tailwind CSS v4，具有以下特性：
-
-- 使用 CSS 变量进行主题化（在 `app/globals.css` 中定义）
-- 通过 `class` 策略支持暗色模式
-- 使用 CSS 变量的自定义调色板
-- shadcn/ui 样式系统
-
-## 生产构建
-
-### 构建 Web 应用
-
-```bash
-# 构建静态导出
+pnpm lint
+pnpm test
 pnpm build
-
-# 输出目录：out/
-# 将 out/ 目录部署到任何静态托管服务
-```
-
-构建会在 `out/` 目录中创建一个静态导出，已针对生产环境进行优化。
-
-### 构建桌面应用
-
-```bash
-# 为当前平台构建
 pnpm tauri build
-
-# 输出位置：
-# - Windows: src-tauri/target/release/bundle/msi/
-# - macOS: src-tauri/target/release/bundle/dmg/
-# - Linux: src-tauri/target/release/bundle/appimage/
 ```
 
-构建选项：
+## 测试现状
 
-```bash
-# 为特定目标构建
-pnpm tauri build --target x86_64-pc-windows-msvc
+仓库已经配置并在使用 Jest。测试主要分布在 `app/`、`components/`、`hooks/`、`lib/`、`store/` 下，与源码同目录维护。
 
-# 使用调试符号构建
-pnpm tauri build --debug
+当前仓库中的代表性测试包括：
 
-# 不打包构建
-pnpm tauri build --bundles none
-```
+- `app/page.test.tsx`
+- `app/(tourist)/login/page.test.tsx`
+- `app/(user)/home/homepage.test.tsx`
+- `components/layout/top-bar.test.tsx`
+- `hooks/use-fetch-profile.test.tsx`
+- `lib/api/auth.test.ts`
+- `store/use-auth-store.test.ts`
 
-## 部署
+详见 [TESTING.md](./TESTING.md)。
 
-### Web 部署
+## CI/CD 现状
 
-#### Vercel（推荐）
+仓库已经有完整的 GitHub Actions 配置：
 
-1. 将代码推送到 GitHub/GitLab/Bitbucket
-2. 在 [Vercel](https://vercel.com/new) 上导入项目
-3. Vercel 会自动检测 Next.js 并部署
+- `ci.yml` 在 `master` 与 `develop` 的 push / PR 上编排质量检查、测试和 Tauri 构建。
+- `quality.yml` 执行 lint、`tsc --noEmit`、`pnpm audit`、`pnpm outdated`。
+- `test.yml` 执行 `pnpm test:coverage`、上传测试与覆盖率产物，并执行 `pnpm build`。
+- `build-tauri.yml` 构建 Linux / Windows / macOS 的未签名桌面产物。
+- `deploy.yml` 已存在，但默认关闭。
+- `release.yml` 在推送 `v*` tag 时创建 draft GitHub Release。
 
-#### Netlify
+详见 [CI_CD.md](./CI_CD.md)。
 
-```bash
-# 构建命令
-pnpm build
+## 与当前实现相关的说明
 
-# 发布目录
-out
-```
+- `package.json` 里的 npm 包名目前仍是 `react-quick-starter`，但应用界面、路由和页面 metadata 已经是 SAST Link 语义。
+- `app/layout.tsx` 当前 metadata 为 `title: "SAST Link"`、`description: "OAuth of SAST"`。
+- `src-tauri/tauri.conf.json` 里的 `productName` 和 `identifier` 仍保留 starter 风格命名；如果后续修改，这份文档也应同步更新。
 
-#### 静态托管（Nginx、Apache 等）
+## 相关文档
 
-1. 构建项目：`pnpm build`
-2. 将 `out/` 目录上传到您的服务器
-3. 配置服务器以提供静态文件
-
-### 桌面部署
-
-#### Windows
-
-- 分发 `src-tauri/target/release/bundle/msi/` 中的 `.msi` 安装程序
-- 用户运行安装程序以安装应用
-
-#### macOS
-
-- 分发 `src-tauri/target/release/bundle/dmg/` 中的 `.dmg` 文件
-- 用户将应用拖到应用程序文件夹
-- **注意**：对于 App Store 之外的分发，您需要使用 Apple 开发者证书对应用进行签名
-
-#### Linux
-
-- 分发 `src-tauri/target/release/bundle/appimage/` 中的 `.AppImage`
-- 用户使其可执行并运行：`chmod +x app.AppImage && ./app.AppImage`
-- 替代格式：`.deb`（Debian/Ubuntu）、`.rpm`（Fedora/RHEL）
-
-#### 代码签名（生产环境推荐）
-
-- **Windows**：使用代码签名证书
-- **macOS**：需要 Apple 开发者账户和证书
-- **Linux**：可选，但建议用于分发
-
-详细说明请参见 [Tauri 分发指南](https://tauri.app/v1/guides/distribution/)。
-
-## 开发工作流
-
-### 典型开发周期
-
-1. **启动开发服务器**
-
-   ```bash
-   pnpm dev  # 用于 Web 开发
-   # 或
-   pnpm tauri dev  # 用于桌面开发
-   ```
-
-2. **进行更改**
-   - 编辑 `app/`、`components/` 或 `lib/` 中的文件
-   - 更改会在浏览器/桌面应用中自动重新加载
-
-3. **添加新组件**
-
-   ```bash
-   pnpm dlx shadcn@latest add [component-name]
-   ```
-
-4. **检查代码**
-
-   ```bash
-   pnpm lint
-   ```
-
-5. **构建和测试**
-
-   ```bash
-   pnpm build  # 测试 Web 构建
-   pnpm tauri build  # 测试桌面构建
-   ```
-
-### 最佳实践
-
-- **代码风格**：遵循 ESLint 规则（`pnpm lint`）
-- **提交**：使用约定式提交（feat:、fix:、docs: 等）
-- **组件**：保持组件小而可复用
-- **状态**：使用 Zustand 管理全局状态，使用 React hooks 管理局部状态
-- **样式**：使用 Tailwind 工具类，尽可能避免自定义 CSS
-- **类型**：利用 TypeScript 实现类型安全
-
-## 故障排除
-
-### 常见问题
-
-**端口 3000 已被占用**
-
-```bash
-# 终止使用端口 3000 的进程
-# Windows
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-
-# macOS/Linux
-lsof -ti:3000 | xargs kill -9
-```
-
-**Tauri 构建失败**
-
-```bash
-# 检查 Tauri 环境
-pnpm tauri info
-
-# 更新 Rust
-rustup update
-
-# 清理构建缓存
-cd src-tauri
-cargo clean
-```
-
-**模块未找到错误**
-
-```bash
-# 清除 Next.js 缓存
-rm -rf .next
-
-# 重新安装依赖
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-```
-
-## 了解更多
-
-### Next.js 资源
-
-- [Next.js 文档](https://nextjs.org/docs) - 了解 Next.js 功能和 API
-- [学习 Next.js](https://nextjs.org/learn) - 交互式 Next.js 教程
-- [Next.js GitHub](https://github.com/vercel/next.js) - Next.js 仓库
-
-### Tauri 资源
-
-- [Tauri 文档](https://tauri.app/) - Tauri 官方文档
-- [Tauri API 参考](https://tauri.app/v1/api/js/) - JavaScript API 参考
-- [Tauri GitHub](https://github.com/tauri-apps/tauri) - Tauri 仓库
-
-### UI 和样式
-
-- [shadcn/ui](https://ui.shadcn.com/) - 组件库文档
-- [Tailwind CSS](https://tailwindcss.com/docs) - Tailwind CSS 文档
-- [Radix UI](https://www.radix-ui.com/) - Radix UI 原语
-
-### 状态管理
-
-- [Zustand](https://zustand-demo.pmnd.rs/) - Zustand 文档
-
-## 贡献
-
-欢迎贡献！请遵循以下步骤：
-
-1. Fork 仓库
-2. 创建功能分支（`git checkout -b feature/amazing-feature`）
-3. 提交更改（`git commit -m 'feat: add amazing feature'`）
-4. 推送到分支（`git push origin feature/amazing-feature`）
-5. 打开 Pull Request
-
-## 许可证
-
-本项目是开源的，采用 [MIT 许可证](LICENSE)。
-
-## 支持
-
-如果您遇到任何问题或有疑问：
-
-- 查看[故障排除](#故障排除)部分
-- 查阅 [Next.js 文档](https://nextjs.org/docs)
-- 查阅 [Tauri 文档](https://tauri.app/)
-- 在 GitHub 上提出 issue
+- [README.md](./README.md)
+- [TESTING.md](./TESTING.md)
+- [CI_CD.md](./CI_CD.md)
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [AGENTS.md](./AGENTS.md)

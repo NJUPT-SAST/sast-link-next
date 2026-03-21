@@ -3,30 +3,46 @@
 import Image from "next/image";
 
 import { message } from "@/lib/message";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface BindAppItemProps {
   iconSrc: string;
   iconAlt: string;
   title: string;
   bound: boolean;
+  darkModeIcon?: boolean;
 }
 
-export function BindAppItem({ iconSrc, iconAlt, title, bound }: BindAppItemProps) {
+export function BindAppItem({
+  iconSrc,
+  iconAlt,
+  title,
+  bound,
+  darkModeIcon = false,
+}: BindAppItemProps) {
   return (
-    <div className="flex flex-row justify-between">
-      <div className="flex flex-row items-center gap-4">
-        <Image src={iconSrc} alt={iconAlt} width={24} height={24} />
-        <span>{title}</span>
+    <div className="flex flex-row items-center justify-between">
+      <div className="flex flex-row items-center gap-3">
+        <Image
+          src={iconSrc}
+          alt={iconAlt}
+          width={24}
+          height={24}
+          className={cn(darkModeIcon && "dark:invert dark:brightness-0")}
+        />
+        <span className="text-sm">{title}</span>
       </div>
       {bound ? (
-        <div className="text-[#4caf50]">已绑定</div>
+        <Badge variant="default">已绑定</Badge>
       ) : (
-        <button
+        <Badge
+          variant="outline"
+          className="cursor-pointer text-muted-foreground"
           onClick={() => message.warning("请退出并使用该方式登录绑定")}
-          className="flex cursor-pointer items-center gap-3.5 text-[#808080]"
         >
-          <span>未绑定</span>
-        </button>
+          未绑定
+        </Badge>
       )}
     </div>
   );

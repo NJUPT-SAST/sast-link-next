@@ -1,284 +1,166 @@
-# Contributing to React Quick Starter
+# Contributing
 
-Thank you for your interest in contributing to React Quick Starter! This document provides guidelines and instructions for contributing.
+This repository is the active SAST Link Next implementation, not a blank starter. When contributing, please keep changes aligned with the existing product flows, route structure, and CI expectations instead of treating the project like a fresh template.
 
-## Table of Contents
+## Before You Start
 
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Making Changes](#making-changes)
-- [Commit Guidelines](#commit-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Coding Standards](#coding-standards)
-- [Testing](#testing)
-- [Documentation](#documentation)
-
-## Code of Conduct
-
-By participating in this project, you agree to maintain a respectful and inclusive environment. Please be considerate of others and focus on constructive collaboration.
-
-## Getting Started
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/react-quick-starter.git
-   cd react-quick-starter
-   ```
-3. **Add the upstream remote**:
-   ```bash
-   git remote add upstream https://github.com/AstroAir/react-quick-starter.git
-   ```
-
-## Development Setup
-
-### Prerequisites
-
-- **Node.js** 20.x or later
-- **pnpm** 8.x or later
-- **Rust** 1.70+ (for Tauri development)
-
-### Installation
+Make sure you can run the project locally:
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Start development server
 pnpm dev
-
-# For Tauri desktop development
-pnpm tauri dev
 ```
 
-### Verify Setup
+If your change touches desktop behavior, also verify:
 
 ```bash
-# Run linting
-pnpm lint
-
-# Run tests
-pnpm test
-
-# Check Tauri environment
 pnpm tauri info
 ```
 
-## Making Changes
+## Branching
 
-### Branch Naming
+The current CI workflows are wired for `master` and `develop`, and the local repository is presently on `master`.
 
-Create a feature branch from `main`:
+Suggested branch naming:
 
-```bash
-git checkout main
-git pull upstream main
-git checkout -b <type>/<description>
-```
-
-Branch types:
-- `feat/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation changes
-- `refactor/` - Code refactoring
-- `test/` - Test additions or modifications
-- `chore/` - Maintenance tasks
+- `feat/<short-description>`
+- `fix/<short-description>`
+- `docs/<short-description>`
+- `test/<short-description>`
+- `refactor/<short-description>`
+- `ci/<short-description>`
+- `chore/<short-description>`
 
 Examples:
-- `feat/add-dark-mode-toggle`
-- `fix/navigation-scroll-issue`
-- `docs/update-installation-guide`
 
-### Keep Your Fork Updated
+- `feat/add-user-bind-status-card`
+- `fix/register-ticket-error`
+- `docs/update-testing-guide`
 
-```bash
-git fetch upstream
-git checkout main
-git merge upstream/main
-```
+## Development Expectations
 
-## Commit Guidelines
+### Preserve the actual app structure
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/) specification.
+Key areas to understand before changing behavior:
 
-### Commit Message Format
+- `app/(tourist)` for unauthenticated flows
+- `app/(user)` for authenticated flows
+- `lib/api` for backend integration
+- `store/` for Zustand state
+- `src-tauri/` for desktop packaging and runtime shell
 
-```
-<type>(<scope>): <description>
+### Follow current conventions
 
-[optional body]
+- Use TypeScript and keep strict typing intact.
+- Use `@/` imports for internal modules.
+- Keep route files lowercase (`page.tsx`, `layout.tsx`).
+- Use colocated tests where practical.
+- Prefer existing UI primitives in `components/ui/` and established layout components before introducing new patterns.
 
-[optional footer(s)]
-```
+## Local Validation
 
-### Types
-
-| Type | Description |
-|------|-------------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation only |
-| `style` | Code style (formatting, semicolons, etc.) |
-| `refactor` | Code change that neither fixes a bug nor adds a feature |
-| `perf` | Performance improvement |
-| `test` | Adding or updating tests |
-| `build` | Build system or external dependencies |
-| `ci` | CI/CD configuration |
-| `chore` | Other changes that don't modify src or test files |
-| `revert` | Reverts a previous commit |
-
-### Examples
+### Minimum for most code changes
 
 ```bash
-feat(ui): add Button component variants
-fix(auth): resolve token refresh loop
-docs(readme): update installation instructions
-refactor(utils): simplify cn helper function
-test(button): add accessibility tests
-```
-
-## Pull Request Process
-
-1. **Update your branch** with the latest upstream changes
-2. **Run all checks locally**:
-   ```bash
-   pnpm lint
-   pnpm test
-   pnpm build
-   ```
-3. **Push your branch** to your fork
-4. **Create a Pull Request** against `main`
-5. **Fill out the PR template** completely
-6. **Request review** from maintainers
-7. **Address feedback** and make requested changes
-8. **Squash commits** if requested
-
-### PR Checklist
-
-- [ ] Code follows project style guidelines
-- [ ] Self-reviewed the code
-- [ ] Added/updated tests as needed
-- [ ] Updated documentation as needed
-- [ ] All CI checks pass
-- [ ] Linked related issues
-
-## Coding Standards
-
-### TypeScript
-
-- Use TypeScript for all new code
-- Enable strict mode
-- Avoid `any` type; use proper typing
-- Export types from dedicated type files when shared
-
-### React
-
-- Use functional components with hooks
-- Follow React 19 best practices
-- Keep components small and focused
-- Use proper prop typing
-
-### Styling
-
-- Use Tailwind CSS utility classes
-- Follow the existing design system
-- Use CSS variables for theming
-- Avoid inline styles
-
-### File Organization
-
-```
-components/
-├── ui/           # shadcn/ui components
-│   └── button.tsx
-├── feature/      # Feature-specific components
-│   └── header.tsx
-└── index.ts      # Barrel exports
-```
-
-### Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `UserProfile.tsx` |
-| Hooks | camelCase with `use` prefix | `useAuth.ts` |
-| Utilities | camelCase | `formatDate.ts` |
-| Types/Interfaces | PascalCase | `UserData` |
-| Constants | SCREAMING_SNAKE_CASE | `MAX_RETRIES` |
-
-## Testing
-
-### Running Tests
-
-```bash
-# Run all tests
+pnpm lint
 pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run with coverage
-pnpm test:coverage
+pnpm build
 ```
 
-### Writing Tests
+### When touching desktop or release packaging
 
-- Place tests next to source files: `Component.test.tsx`
-- Use React Testing Library for component tests
-- Test behavior, not implementation details
-- Aim for meaningful coverage, not 100%
-
-### Test Structure
-
-```typescript
-import { render, screen } from '@testing-library/react'
-import { Button } from './button'
-
-describe('Button', () => {
-  it('renders children correctly', () => {
-    render(<Button>Click me</Button>)
-    expect(screen.getByRole('button')).toHaveTextContent('Click me')
-  })
-
-  it('handles click events', async () => {
-    const handleClick = jest.fn()
-    render(<Button onClick={handleClick}>Click</Button>)
-    await userEvent.click(screen.getByRole('button'))
-    expect(handleClick).toHaveBeenCalledTimes(1)
-  })
-})
+```bash
+pnpm tauri build
 ```
 
-## Documentation
+### For documentation-only changes
 
-### When to Update Docs
+At minimum, make sure the documented commands and file paths match the repo as it exists now.
 
-- Adding new features
-- Changing existing behavior
-- Updating dependencies
-- Modifying configuration
+## Commit Style
 
-### Documentation Files
+Use Conventional Commits whenever possible:
 
-- `README.md` - Project overview and quick start
-- `README_zh.md` - Chinese documentation
-- `CONTRIBUTING.md` - This file
-- `CI_CD.md` - CI/CD setup guide
-- `TESTING.md` - Testing guide
+- `feat:`
+- `fix:`
+- `docs:`
+- `refactor:`
+- `test:`
+- `ci:`
+- `chore:`
 
-### Code Comments
+Examples:
 
-- Use JSDoc for public APIs
-- Explain "why", not "what"
-- Keep comments up to date
+```text
+feat(auth): add github callback state handling
+fix(profile): clamp avatar zoom wheel interactions
+docs(readme): sync setup guide with current routes
+test(api): add auth client coverage
+```
 
-## Questions?
+## Pull Requests
 
-If you have questions, feel free to:
+Use the repository’s PR template and include:
 
-1. Check existing [Issues](https://github.com/AstroAir/react-quick-starter/issues)
-2. Open a new issue for discussion
-3. Reach out to maintainers
+- what changed
+- why it changed
+- how it was validated
+- screenshots or recordings for UI changes
 
-Thank you for contributing! 🎉
+Before opening a PR:
+
+1. self-review the diff
+2. make sure related docs are updated
+3. confirm CI-relevant commands still pass locally when applicable
+
+## Documentation Responsibilities
+
+Update docs when you change:
+
+- routes or user flows
+- environment variables
+- build or test commands
+- CI behavior
+- Tauri packaging behavior
+
+Primary documentation files:
+
+- `README.md`
+- `README_zh.md`
+- `TESTING.md`
+- `CI_CD.md`
+- `CONTRIBUTING.md`
+
+## Testing Guidance
+
+If you add or change behavior:
+
+- update or add colocated Jest tests when feasible
+- keep tests focused on user-visible behavior and state transitions
+- avoid weakening coverage or CI thresholds without documenting the reason
+
+See [TESTING.md](./TESTING.md) for the current test setup.
+
+## Desktop-Specific Notes
+
+The application currently uses:
+
+- `next.config.ts` with static export
+- `src-tauri/tauri.conf.json` with `frontendDist: "../out"`
+- `pnpm tauri dev` and `pnpm tauri build` as the supported entry points
+
+If you change any of those assumptions, update:
+
+- Tauri config
+- relevant workflow files
+- README / CI docs
+
+## Issues and Follow-up
+
+If you cannot complete a change fully:
+
+- document the exact boundary
+- leave reproducible notes
+- avoid vague “partial” states without explaining what still blocks completion
+
+That makes the next contributor much faster and reduces re-discovery work.

@@ -2,46 +2,63 @@
 
 ## Project Structure & Module Organization
 
-- `app/` Next.js App Router (routes: `page.tsx`, `layout.tsx`, global styles in `globals.css`).
-- `components/ui/` Reusable UI components (shadcn patterns), e.g., `components/ui/button.tsx`.
-- `lib/` Shared utilities (e.g., `lib/utils.ts`).
-- `public/` Static assets (SVGs, icons).
-- `src-tauri/` Tauri desktop wrapper (Rust code, config, icons).
-- Root configs: `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `components.json`.
+- `app/` contains the Next.js App Router implementation, including:
+  - root account-switch route in `app/page.tsx`
+  - tourist routes under `app/(tourist)`
+  - authenticated routes under `app/(user)`
+  - global styles in `app/globals.css`
+  - runtime providers in `app/providers.tsx`
+- `components/` contains shared UI and feature components; `components/ui/` is the reusable primitive layer.
+- `hooks/` contains shared hooks such as `use-fetch-profile.ts`.
+- `lib/` contains shared runtime logic, especially `lib/api/`, validation helpers, token helpers, and message helpers.
+- `store/` contains Zustand state stores.
+- `public/` contains static assets and the generated MSW worker.
+- `src-tauri/` contains the Tauri desktop wrapper, Rust entrypoints, and packaging config.
+- Root configs include `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `components.json`, and `jest.config.ts`.
 
 ## Build, Test, and Development Commands
 
 - `pnpm dev` — Run Next.js in development.
-- `pnpm build` — Create a production build.
-- `pnpm start` — Serve the production build.
-- `pnpm lint` — Run ESLint. Use `--fix` to auto-fix.
-- `pnpm tauri dev` — Launch desktop app (requires Rust toolchain).
+- `pnpm build` — Create the static-export production build consumed by Tauri.
+- `pnpm start` — Serve the production build through Next.js.
+- `pnpm lint` — Run ESLint.
+- `pnpm test` — Run the Jest suite.
+- `pnpm test:watch` — Run Jest in watch mode.
+- `pnpm test:coverage` — Run Jest with coverage output.
+- `pnpm exec tsc --noEmit` — Run TypeScript type checking.
+- `pnpm tauri dev` — Launch the desktop app in development mode.
 - `pnpm tauri build` — Build desktop binaries.
+- `pnpm tauri info` — Inspect local Tauri tooling/environment.
 
 ## Coding Style & Naming Conventions
 
 - Language: TypeScript with React 19 and Next.js 16.
-- Linting: `eslint.config.mjs` is the source of truth; keep code warning-free.
-- Styling: Tailwind CSS v4 (utility-first). Co-locate minimal component-specific styles.
-- Components: PascalCase names/exports; files in `components/ui/` mirror export names.
-- Routes: Next app files are lowercase (`page.tsx`, `layout.tsx`).
+- Linting: `eslint.config.mjs` is the source of truth.
+- Styling: Tailwind CSS v4 with shared tokens in `app/globals.css`.
+- Components: PascalCase names/exports; keep reusable primitives in `components/ui/`.
+- Routes: Next app files stay lowercase (`page.tsx`, `layout.tsx`).
 - Code: camelCase variables/functions; hooks start with `use*`.
+- Imports: prefer `@/` aliases for internal modules.
 
 ## Testing Guidelines
 
-- No test runner is configured yet. Recommended: Vitest (unit) and Playwright (e2e).
-- Name tests `*.test.ts`/`*.test.tsx`; co-locate next to source or in `tests/`.
-- Prioritize `lib/` utilities and complex UI logic for coverage.
+- Jest is already configured and should be treated as the active test runner.
+- Tests use `*.test.ts` / `*.test.tsx` and are mostly colocated with source.
+- Current coverage spans `app/`, `components/`, `hooks/`, `lib/`, and `store/`.
+- Prefer React Testing Library + `userEvent` for UI behavior.
+- When changing runtime behavior, update or add the closest colocated test where practical.
 
 ## Commit & Pull Request Guidelines
 
-- Prefer Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `ci:`.
+- Prefer Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `ci:`.
 - Link issues in the footer: `Closes #123`.
-- PRs should include: brief scope/intent, screenshots for UI changes, validation steps, and pass `pnpm lint`.
+- PRs should include a short scope/intent summary, screenshots for UI changes, and the validation steps actually run.
 - Keep changes focused; avoid unrelated refactors.
 
 ## Security & Configuration Tips
 
-- Use `.env.local` for secrets; do not commit `.env*` files.
+- Use `.env.local` for local secrets; do not commit `.env*` files.
 - Only expose safe client values via `NEXT_PUBLIC_*`.
-- Tauri: minimize capabilities in `src-tauri/tauri.conf.json`; avoid broad filesystem access.
+- `NEXT_PUBLIC_API_BASE_URL` configures the backend base URL.
+- `NEXT_PUBLIC_API_MOCKING=true` enables MSW-backed API mocking in the app provider layer.
+- Tauri uses `src-tauri/tauri.conf.json` with `frontendDist: "../out"`, so keep Next.js static export settings aligned with desktop packaging.

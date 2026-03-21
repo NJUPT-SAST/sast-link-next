@@ -40,8 +40,8 @@ export function VeriCode({ onResend }: VeriCodeProps) {
       className={cn(
         "text-base font-semibold",
         clickable
-          ? "cursor-pointer text-[#0a96d6]"
-          : "pointer-events-none text-black/30",
+          ? "cursor-pointer text-primary"
+          : "pointer-events-none text-muted-foreground",
       )}
     >
       {clickable ? "" : `${count}s 后`}重新发送

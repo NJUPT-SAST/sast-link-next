@@ -1,18 +1,29 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 import { verifyLoginAccount } from "@/lib/api/auth";
-import { handleError, type ErrorState } from "@/lib/form-helpers";
 import { message } from "@/lib/message";
-import { InputWithLabel } from "@/components/ui/input-with-label";
+import {
+  type LoginAccountFormValues,
+  loginAccountFormSchema,
+} from "@/lib/validations/auth";
+import { AuthFormField } from "@/components/auth/auth-form-field";
 import { DotLoading } from "@/components/ui/dot-loading";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { OtherLoginList } from "@/components/auth/other-login-list";
 import { GithubIcon, QqIcon, MsIcon } from "@/components/icons/brand-icons";
 import { PageTransition } from "@/components/animation/page-transition";
-import { Footer } from "@/components/layout/footer";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -22,11 +33,14 @@ interface LoginStep1Props {
 
 export default function LoginStep1({ onNext }: LoginStep1Props) {
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const urlParams = useSearchParams();
-  const [error, setError] = useState<ErrorState>({ error: false });
+  const form = useForm<LoginAccountFormValues>({
+    resolver: zodResolver(loginAccountFormSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
 
-  // BUG FIX: moved inside component (was at module scope accessing window)
   const oauthList = useMemo(
     () => [
       {
@@ -43,81 +57,82 @@ export default function LoginStep1({ onNext }: LoginStep1Props) {
     [],
   );
 
-  const validate = useCallback((value: string) => {
-    if (value === "") return "用户名不可为空";
-    return false;
-  }, []);
-
   useEffect(() => {
     if (urlParams.get("oauthTicket")) {
       message.warning("请先绑定账号");
     }
   }, [urlParams]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const username = inputRef.current?.value ?? "";
-    const check = validate(username);
-    if (check) {
-      setError(handleError(check));
-      return;
-    }
-
-    setLoading(true);
-    verifyLoginAccount(username)
-      .then((res) => {
-        if (res.data.Success) {
-          onNext(res.data.Data.loginTicket);
-          return;
-        }
-        setError({ error: true, errMsg: res.data.ErrMsg });
-      })
-      .catch(() => {
-        setError({ error: true, errMsg: "网络错误" });
-      })
-      .finally(() => setLoading(false));
-  };
-
   const isOAuthBinding = !!urlParams.get("oauthTicket");
 
-  return (
-    <PageTransition className="flex w-full flex-col items-center gap-4 px-8 pt-6">
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full flex-col items-center gap-6"
-      >
-        <div className="w-full">
-          <InputWithLabel
-            ref={inputRef}
-            label="账户"
-            name="username"
-            error={error}
-            placeholder="学号或邮箱"
-          />
-          <div className="mt-2 flex justify-end">
-            <Link
-              href="/reset"
-              className="text-sm text-[#808080] hover:underline"
-            >
-              忘记密码
-            </Link>
-          </div>
-        </div>
+  const handleSubmit = form.handleSubmit(async ({ username }) => {
+    setLoading(true);
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex h-[42px] w-[314px] cursor-pointer items-center justify-center rounded-[10px] border-[3px] border-[#1c1f23] bg-[#1c1f23] text-xl font-semibold text-white disabled:opacity-50"
-        >
-          {loading ? (
-            <DotLoading />
-          ) : isOAuthBinding ? (
-            "绑定账号"
-          ) : (
-            "下一步"
-          )}
-        </button>
-      </form>
+    try {
+      const res = await verifyLoginAccount(username.trim());
+      if (res.data.Success) {
+        onNext(res.data.Data.loginTicket);
+        return;
+      }
+
+      form.setError("username", {
+        message: res.data.ErrMsg,
+      });
+    } catch {
+      form.setError("username", {
+        message: "网络错误",
+      });
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  return (
+    <PageTransition className="flex w-full flex-col items-center gap-4 px-8 pt-8">
+      <Form {...form}>
+        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-6">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field, fieldState }) => (
+              <FormItem className="space-y-2">
+                <AuthFormField
+                  {...field}
+                  ref={field.ref}
+                  label="账户"
+                  placeholder="学号或邮箱"
+                  autoComplete="username"
+                  invalid={!!fieldState.error}
+                  description="请输入 9 位学号或常用邮箱地址。"
+                />
+                <div className="flex justify-end">
+                  <Link
+                    href="/reset"
+                    className="text-sm text-[#808080] hover:underline"
+                  >
+                    忘记密码
+                  </Link>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-[42px] w-[314px] self-center rounded-[10px] border-[3px] border-[#1c1f23] text-base font-semibold sm:text-xl"
+          >
+            {loading ? (
+              <DotLoading />
+            ) : isOAuthBinding ? (
+              "绑定账号"
+            ) : (
+              "下一步"
+            )}
+          </Button>
+        </form>
+      </Form>
 
       {!isOAuthBinding && (
         <>

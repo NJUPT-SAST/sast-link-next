@@ -42,10 +42,11 @@ export function MagicCard({
 
   return (
     <div
+      data-slot="magic-card"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "group relative flex size-full overflow-hidden rounded-xl border text-black",
+        "group relative flex size-full overflow-hidden rounded-xl border text-card-foreground",
         className,
       )}
       style={{

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { ThemeProvider } from "next-themes";
 import { SWRConfig } from "swr";
 
 import { GlobalMessagePanel } from "@/components/feedback/global-message-panel";
@@ -20,9 +21,15 @@ export function Providers({ children }: { children: ReactNode }) {
   if (!mockReady) return null;
 
   return (
-    <SWRConfig value={{ revalidateOnFocus: false }}>
-      {children}
-      <GlobalMessagePanel />
-    </SWRConfig>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+    >
+      <SWRConfig value={{ revalidateOnFocus: false }}>
+        {children}
+        <GlobalMessagePanel />
+      </SWRConfig>
+    </ThemeProvider>
   );
 }

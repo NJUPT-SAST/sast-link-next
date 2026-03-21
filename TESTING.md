@@ -1,261 +1,213 @@
 # Testing Guide
 
-This document provides information about the testing setup and how to run tests in this project.
+This repository already uses Jest as its active test runner. Tests are colocated with the implementation and cover route components, shared UI, hooks, stores, and API helpers.
 
-## Testing Stack
+## Current Test Stack
 
-- **Test Runner**: Jest 30.x
-- **Testing Library**: @testing-library/react 16.x
-- **Test Environment**: jsdom (simulates browser environment)
-- **Coverage Provider**: V8
-- **CI/CD**: GitHub Actions
+- Jest 30
+- `next/jest` integration
+- `jest-fixed-jsdom` environment
+- React Testing Library
+- `@testing-library/user-event`
+- `@testing-library/jest-dom`
+- MSW for request mocking where needed
+- `jest-junit` for CI test result output
 
-## Running Tests
+## Source of Truth
 
-### Run all tests
+The main configuration lives in:
+
+- `jest.config.ts`
+- `jest.setup.ts`
+- `jest.polyfills.ts`
+
+Important current config details:
+
+- `collectCoverage` is `false` by default in config, but `pnpm test:coverage` enables it from the CLI.
+- Coverage is collected from `app/`, `components/`, and `lib/`.
+- Coverage thresholds are configured globally:
+  - branches: 60
+  - functions: 60
+  - lines: 70
+  - statements: 70
+- Tests ignore `.next/`, `out/`, `node_modules/`, and `src-tauri/`.
+- Path alias `@/` is mapped to the repository root.
+
+## Available Commands
+
+| Command | Use |
+| --- | --- |
+| `pnpm test` | Run the full Jest suite once |
+| `pnpm test:watch` | Run Jest in watch mode |
+| `pnpm test:coverage` | Generate coverage artifacts in `coverage/` |
+
+Examples:
 
 ```bash
 pnpm test
-```
-
-### Run tests in watch mode
-
-```bash
 pnpm test:watch
-```
-
-### Run tests with coverage
-
-```bash
 pnpm test:coverage
 ```
 
-### Run specific test file
+To run a single file:
 
 ```bash
-pnpm test path/to/test-file.test.tsx
+pnpm test -- app/page.test.tsx
 ```
 
-### Run tests matching a pattern
+To filter by name:
 
 ```bash
-pnpm test --testNamePattern="Button"
+pnpm test -- --testNamePattern="login"
 ```
 
-## Test File Structure
+## What Is Currently Tested
 
-Test files should be placed next to the files they test with the `.test.ts` or `.test.tsx` extension:
+### App routes and providers
 
-```
-components/
-  ui/
-    button.tsx
-    button.test.tsx  ← Test file
-app/
-  page.tsx
-  page.test.tsx      ← Test file
-lib/
-  utils.ts
-  utils.test.ts      ← Test file
-```
+- `app/layout.test.tsx`
+- `app/page.test.tsx`
+- `app/providers.test.tsx`
+- `app/(tourist)/login/page.test.tsx`
+- `app/(user)/home/homepage.test.tsx`
+- `app/(user)/home/edit/page.test.tsx`
 
-## Writing Tests
+### Components
 
-### Component Test Example
+Representative examples:
 
-```typescript
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { Button } from './button';
+- `components/account/account-panel.test.tsx`
+- `components/animation/page-transition.test.tsx`
+- `components/auth/other-login-list.test.tsx`
+- `components/layout/top-bar.test.tsx`
+- `components/navigation/back-button.test.tsx`
+- `components/profile/bind-app-item.test.tsx`
+- `components/ui/button.test.tsx`
 
-describe('Button', () => {
-  it('renders a button with text', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
-  });
+### Hooks
 
-  it('handles click events', async () => {
-    const handleClick = jest.fn();
-    const user = userEvent.setup();
-    
-    render(<Button onClick={handleClick}>Click me</Button>);
-    await user.click(screen.getByRole('button'));
-    
-    expect(handleClick).toHaveBeenCalledTimes(1);
-  });
-});
-```
+- `hooks/use-fetch-profile.test.tsx`
 
-### Utility Function Test Example
+### Libraries and API wrappers
 
-```typescript
-import { cn } from './utils';
+- `lib/form-helpers.test.ts`
+- `lib/message.test.ts`
+- `lib/token.test.ts`
+- `lib/utils.test.ts`
+- `lib/api/auth.test.ts`
+- `lib/api/client.test.ts`
+- `lib/api/oauth.test.ts`
+- `lib/api/user.test.ts`
+- `lib/constants/department.test.ts`
+- `lib/validations/profile.test.ts`
 
-describe('cn utility function', () => {
-  it('merges class names correctly', () => {
-    const result = cn('class1', 'class2');
-    expect(result).toBe('class1 class2');
-  });
-});
-```
+### Zustand stores
 
-## Coverage Reports
+- `store/use-auth-store.test.ts`
+- `store/use-panel-store.test.ts`
+- `store/use-user-list-store.test.ts`
+- `store/use-user-profile-store.test.ts`
 
-After running `pnpm test:coverage`, coverage reports are generated in the `coverage/` directory:
+## Testing Conventions in This Repo
 
-- **HTML Report**: `coverage/index.html` - Open in browser for interactive coverage report
-- **LCOV Report**: `coverage/lcov.info` - For CI/CD integration
-- **JUnit XML**: `coverage/junit.xml` - For CI/CD test result reporting
-- **Clover XML**: `coverage/clover.xml` - Alternative coverage format
+- Prefer colocated test files next to the source they cover.
+- Use `*.test.ts` or `*.test.tsx`.
+- Test visible behavior and state transitions instead of implementation internals.
+- Use accessible queries first: `getByRole`, `getByLabelText`, `getByText`.
+- Use `userEvent` for interactions instead of lower-level DOM event helpers when possible.
 
-### Viewing Coverage Report
+## Mocking and Setup Notes
 
-Open the HTML coverage report in your browser:
+### Next.js integration
+
+`next/jest` is used so the Jest environment stays aligned with the Next.js project config.
+
+### Global setup
+
+`jest.setup.ts` is used for testing-library setup and shared mocks.
+
+### MSW support
+
+The repository includes an MSW setup and a `NEXT_PUBLIC_API_MOCKING` switch in application runtime. Tests that need network isolation can use the existing mock infrastructure rather than inventing a second mocking strategy.
+
+## Coverage Output
+
+`pnpm test:coverage` writes to `coverage/` and produces:
+
+- HTML report
+- `lcov.info`
+- JSON coverage
+- Clover
+- Cobertura
+- `coverage/junit.xml`
+
+The CI workflow uploads:
+
+- `coverage/junit.xml` as `test-results`
+- the entire `coverage/` directory as `coverage-report`
+
+## How CI Uses Tests
+
+The current GitHub Actions flow runs:
 
 ```bash
-# Windows
-start coverage/index.html
-
-# macOS
-open coverage/index.html
-
-# Linux
-xdg-open coverage/index.html
+pnpm test:coverage
+pnpm build
 ```
 
-## Jest Configuration
+inside `.github/workflows/test.yml`.
 
-The Jest configuration is in `jest.config.ts` and includes:
+So if you change runtime behavior, you should expect both the Jest suite and the static export build to remain green.
 
-- **Test Environment**: jsdom for React component testing
-- **Setup File**: `jest.setup.ts` - Configures testing-library/jest-dom and mocks
-- **Module Name Mapper**: Handles path aliases (@/components, @/lib, etc.)
-- **Coverage Collection**: Configured to collect from app/, components/, and lib/ directories
-- **Reporters**: Default console reporter + JUnit XML reporter for CI
+## Recommended Local Validation Before Merging
 
-## Mocked Modules
+For doc-only changes:
 
-The following Next.js modules are automatically mocked in `jest.setup.ts`:
-
-- `next/image` - Mocked to render as standard `<img>` tag
-- `next/navigation` - Mocked router hooks (useRouter, usePathname, useSearchParams)
-
-## CI/CD Integration
-
-Tests run automatically on:
-
-- Push to `master` or `develop` branches via `.github/workflows/ci.yml`
-- Pull requests to `master` or `develop` branches via `.github/workflows/ci.yml`
-- Version tags via `.github/workflows/release.yml`
-
-The `test.yml` reusable workflow itself is invoked by `ci.yml`/`release.yml`, and can also be run manually with `workflow_dispatch` when you want to debug test/build steps in isolation.
-
-The CI pipeline:
-
-1. Installs dependencies
-2. Runs linting (`pnpm lint`)
-3. Runs tests with coverage (`pnpm test:coverage`)
-4. Uploads coverage to Codecov (if configured)
-5. Uploads test results and coverage as artifacts
-6. Builds the Next.js application (`pnpm build`)
-
-### GitHub Actions Workflow
-
-The workflow is defined in `.github/workflows/ci.yml`.
-
-### Setting up Codecov (Optional)
-
-To enable Codecov integration:
-
-1. Sign up at [codecov.io](https://codecov.io)
-2. Add your repository
-3. Add `CODECOV_TOKEN` to your GitHub repository secrets
-4. Coverage will be automatically uploaded on each CI run
-
-## Best Practices
-
-### 1. Test Behavior, Not Implementation
-
-❌ Bad:
-
-```typescript
-expect(component.state.count).toBe(1);
+```bash
+pnpm lint
 ```
 
-✅ Good:
+For code changes:
 
-```typescript
-expect(screen.getByText('Count: 1')).toBeInTheDocument();
+```bash
+pnpm test
+pnpm lint
+pnpm build
 ```
 
-### 2. Use Accessible Queries
+For behavior touching desktop packaging or Tauri config:
 
-Prefer queries that reflect how users interact with your app:
-
-1. `getByRole` - Best for most elements
-2. `getByLabelText` - Good for form fields
-3. `getByPlaceholderText` - For inputs without labels
-4. `getByText` - For non-interactive elements
-5. `getByTestId` - Last resort
-
-### 3. Use User Events
-
-Use `@testing-library/user-event` instead of `fireEvent`:
-
-❌ Bad:
-
-```typescript
-fireEvent.click(button);
-```
-
-✅ Good:
-
-```typescript
-const user = userEvent.setup();
-await user.click(button);
-```
-
-### 4. Clean Up After Tests
-
-Jest automatically cleans up after each test, but if you create side effects:
-
-```typescript
-afterEach(() => {
-  // Clean up
-  jest.clearAllMocks();
-});
-```
-
-### 5. Test Accessibility
-
-```typescript
-it('has accessible button', () => {
-  render(<Button>Click me</Button>);
-  const button = screen.getByRole('button', { name: /click me/i });
-  expect(button).toBeInTheDocument();
-});
+```bash
+pnpm test
+pnpm lint
+pnpm build
+pnpm tauri build
 ```
 
 ## Troubleshooting
 
-### Tests are slow
+### Tests fail because of stale build artifacts
 
-- Use `test.only()` to run a single test during development
-- Use `pnpm test:watch` to run only changed tests
+Clear transient output if needed:
 
-### Module not found errors
+```powershell
+Remove-Item -Recurse -Force .next, coverage -ErrorAction SilentlyContinue
+```
 
-- Check that path aliases in `jest.config.ts` match `tsconfig.json`
-- Ensure the module is properly mocked if it's a Next.js-specific module
+### Module alias resolution issues
 
-### Coverage not collected
+Check that:
 
-- Verify the file is in the `collectCoverageFrom` patterns in `jest.config.ts`
-- Check that the file isn't in `coveragePathIgnorePatterns`
+- `tsconfig.json` still maps `@/*`
+- `jest.config.ts` still maps `^@/(.*)$` to `<rootDir>/$1`
 
-## Resources
+### Coverage looks inconsistent
 
-- [Jest Documentation](https://jestjs.io/)
-- [Testing Library Documentation](https://testing-library.com/docs/react-testing-library/intro/)
-- [Testing Library Cheatsheet](https://testing-library.com/docs/react-testing-library/cheatsheet)
-- [Common Testing Mistakes](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
+Remember:
+
+- `collectCoverage` is off in base config
+- `pnpm test:coverage` is the command that turns on coverage collection for normal workflows
+
+### Tauri code is not covered
+
+That is expected in the current setup. Jest ignores `src-tauri/`, so Rust-side logic must be validated separately with Rust tooling if native code grows beyond today’s small shell wrapper.

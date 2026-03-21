@@ -1,0 +1,4 @@
+{
+  "title": "功能",
+  "pages": ["authentication", "registration", "password-reset", "oauth", "user-profile"]
+}

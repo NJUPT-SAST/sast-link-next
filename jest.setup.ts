@@ -6,6 +6,18 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 
+if (!HTMLElement.prototype.hasPointerCapture) {
+  HTMLElement.prototype.hasPointerCapture = () => false;
+}
+
+if (!HTMLElement.prototype.setPointerCapture) {
+  HTMLElement.prototype.setPointerCapture = () => {};
+}
+
+if (!HTMLElement.prototype.releasePointerCapture) {
+  HTMLElement.prototype.releasePointerCapture = () => {};
+}
+
 type MockNextImageProps = React.ComponentPropsWithoutRef<'img'> & {
   priority?: boolean;
   fill?: boolean;

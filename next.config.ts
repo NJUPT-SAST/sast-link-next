@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -8,6 +9,11 @@ const internalHost = process.env.TAURI_DEV_HOST || "localhost";
 // This makes `pnpm build` generate the `out/` directory that Tauri loads from `src-tauri/tauri.conf.json` (frontendDist: "../out").
 const nextConfig: NextConfig = {
   output: "export",
+  turbopack: {
+    // Explicitly set the workspace root so Turbopack does not get confused
+    // by the docs/ package living inside the same repository.
+    root: path.resolve("."),
+  },
   // Note: This feature is required to use the Next.js Image component in SSG mode.
   // See https://nextjs.org/docs/messages/export-image-api for different workarounds.
   images: {

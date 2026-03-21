@@ -1,11 +1,23 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import { verifyCaptcha, verifyRegistAccount, sendMail } from "@/lib/api/auth";
-import { handleError, type ErrorState } from "@/lib/form-helpers";
-import { InputWithLabel } from "@/components/ui/input-with-label";
+import {
+  type VerificationCodeFormValues,
+  verificationCodeFormSchema,
+} from "@/lib/validations/auth";
+import { AuthFormField } from "@/components/auth/auth-form-field";
 import { DotLoading } from "@/components/ui/dot-loading";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { VeriCode } from "@/components/auth/verification-code-input";
 import { Footer } from "@/components/layout/footer";
 
@@ -23,32 +35,34 @@ export default function RegisterStep2({
   onNext,
 }: Props) {
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [error, setError] = useState<ErrorState>({ error: false });
+  const form = useForm<VerificationCodeFormValues>({
+    resolver: zodResolver(verificationCodeFormSchema),
+    defaultValues: {
+      captcha: "",
+    },
+  });
 
-  const validate = useCallback((value: string) => {
-    if (value === "") return "验证码不可为空";
-    return false;
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const captcha = inputRef.current?.value ?? "";
-    const check = validate(captcha);
-    if (check) {
-      setError(handleError(check));
-      return;
-    }
-
+  const handleSubmit = form.handleSubmit(async ({ captcha }) => {
     setLoading(true);
-    verifyCaptcha(ticket, captcha)
-      .then((res) => {
-        if (res.data.Success) onNext();
-        else setError(handleError(res.data.ErrMsg));
-      })
-      .catch(() => setError({ error: true, errMsg: "网络错误" }))
-      .finally(() => setLoading(false));
-  };
+
+    try {
+      const res = await verifyCaptcha(ticket, captcha);
+      if (res.data.Success) {
+        onNext();
+        return;
+      }
+
+      form.setError("captcha", {
+        message: res.data.ErrMsg,
+      });
+    } catch {
+      form.setError("captcha", {
+        message: "网络错误",
+      });
+    } finally {
+      setLoading(false);
+    }
+  });
 
   const handleResend = async () => {
     const res = await verifyRegistAccount(username);
@@ -60,40 +74,53 @@ export default function RegisterStep2({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex w-full flex-col items-center gap-6 px-8 pt-6"
-    >
-      <div className="w-full">
-        <div className="flex items-center gap-1">
-          <span className="text-xl font-semibold text-[#1c1f23]">S-</span>
-          <div className="flex-1">
-            <InputWithLabel
-              ref={inputRef}
-              error={error}
-              name="veriCode"
-              label="验证码"
-              placeholder="验证码"
-              maxLength={5}
-            >
-              <VeriCode onResend={handleResend} />
-            </InputWithLabel>
-          </div>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          已经往 {username} 发送一封带有验证码的邮件，请注意查收！
-        </p>
-      </div>
+    <Form {...form}>
+      <form
+        onSubmit={handleSubmit}
+        className="flex w-full flex-col items-center gap-6 px-8 pt-8"
+      >
+        <FormField
+          control={form.control}
+          name="captcha"
+          render={({ field, fieldState }) => {
+            const { ref, ...fieldProps } = field;
 
-      <Footer>
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex h-[42px] w-[314px] cursor-pointer items-center justify-center rounded-[10px] border-[3px] border-[#1c1f23] bg-[#1c1f23] text-xl font-semibold text-white disabled:opacity-50"
-        >
-          {loading ? <DotLoading /> : "下一步"}
-        </button>
-      </Footer>
-    </form>
+            return (
+              <FormItem className="w-full space-y-2">
+                <div className="flex items-start gap-1">
+                  <span className="pt-[30px] text-xl font-semibold text-[#1c1f23]">
+                    S-
+                  </span>
+                  <AuthFormField
+                    {...fieldProps}
+                    ref={ref}
+                    containerClassName="flex-1"
+                    label="验证码"
+                    placeholder="5 位验证码"
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    maxLength={5}
+                    invalid={!!fieldState.error}
+                    suffix={<VeriCode onResend={handleResend} />}
+                    description={`验证码已发送至 ${username}，该验证码短时有效，且仅应由邮箱持有人使用。`}
+                  />
+                </div>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+
+        <Footer>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-[42px] w-[314px] rounded-[10px] border-[3px] border-[#1c1f23] text-base font-semibold sm:text-xl"
+          >
+            {loading ? <DotLoading /> : "下一步"}
+          </Button>
+        </Footer>
+      </form>
+    </Form>
   );
 }

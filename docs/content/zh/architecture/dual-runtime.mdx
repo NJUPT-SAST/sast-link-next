@@ -1,0 +1,92 @@
+---
+title: 双运行时
+description: Tauri 2 如何与 Next.js 静态导出集成
+---
+
+## 概述
+
+sast-link-next 从单一代码库针对两种部署环境进行构建：
+
+- **Web 端**：由任意静态文件托管服务或 CDN 提供。
+- **桌面端**：使用 Tauri 2 打包为原生应用。
+
+两者均使用 `pnpm build` 生成的同一份 HTML/CSS/JS 产物。
+
+## 静态导出配置
+
+`next.config.ts` 设置 `output: "export"`，`pnpm build` 将所有页面与资源以静态文件的形式写入 `out/` 目录，运行时无需 Node.js 服务进程。
+
+```ts
+// next.config.ts
+const nextConfig: NextConfig = {
+  output: "export",
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "sast-link-1309205610.cos.ap-shanghai.myqcloud.com",
+      },
+    ],
+  },
+  assetPrefix: isProd ? undefined : `http://${internalHost}:3000`,
+};
+```
+
+`images.unoptimized: true` 是必须的，因为 Next.js 图片优化 API 需要服务端支持。远程图片从 `sast-link-1309205610.cos.ap-shanghai.myqcloud.com` 直接获取，不经过服务端优化。
+
+开发环境下，`assetPrefix` 被设置为 Tauri 开发宿主地址，确保 WebView 能正确解析资源路径。
+
+## Tauri 配置
+
+`src-tauri/tauri.conf.json` 将 Tauri 壳与 Next.js 产物关联：
+
+```json
+{
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../out"
+  }
+}
+```
+
+- `beforeDevCommand`：执行 `pnpm tauri dev` 时，Tauri 首先启动 `pnpm dev` 开发服务器，再打开指向 `http://localhost:3000` 的 WebView。
+- `beforeBuildCommand`：执行 `pnpm tauri build` 时，Tauri 首先运行 `pnpm build` 生成 `out/`，再将其打包为安装包。
+- `frontendDist`：生产环境下，Tauri 通过自定义协议以本地文件方式从 `../out` 加载应用。
+
+## Rust 入口
+
+`src-tauri/src/lib.rs` 包含 Tauri 应用配置。调试构建时会启用 Tauri 日志插件，将 Rust 日志输出至开发者控制台：
+
+```rust
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())  // 仅调试模式
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+## 平台支持
+
+CI 流水线（`build-tauri.yml`）并行构建四个目标平台的安装包：
+
+| 平台 | 安装包格式 |
+|---|---|
+| Windows | NSIS 安装器、MSI |
+| macOS（Intel）| DMG、App Bundle |
+| Linux | AppImage、DEB |
+| macOS（Apple Silicon）| DMG、App Bundle |
+
+## 静态导出的限制
+
+由于应用是静态导出，以下 Next.js 功能不可用：
+
+- 带运行时状态的 Route Handlers（无法修改服务器内存的 POST 端点）
+- Server Actions（需要 Node.js 服务进程）
+- 动态服务端渲染（App Router 中等价于 `getServerSideProps` 的功能）
+- 增量静态再生（ISR）
+
+所有数据拉取均在客户端通过 Axios 和 SWR 对外部后端 API（`NEXT_PUBLIC_API_BASE_URL`）完成。

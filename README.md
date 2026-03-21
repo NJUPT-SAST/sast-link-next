@@ -1,475 +1,232 @@
-# React Quick Starter
+# SAST Link Next
 
-A modern, full-stack starter template combining **Next.js 16** with **React 19** for web applications and **Tauri 2.9** for cross-platform desktop applications. Built with TypeScript, Tailwind CSS v4, and shadcn/ui components.
+SAST Link Next is the current Next.js + Tauri implementation of the SAST Link account system. It is no longer a generic starter template: the repository already contains the migrated authentication flows, account switcher, user homepage, profile editing, avatar cropping, desktop packaging, Jest tests, and GitHub Actions workflows.
 
 [中文文档](./README_zh.md)
 
-## Features
+## What This Project Does
 
-- ⚡️ **Next.js 16** with App Router and React 19
-- 🖥️ **Tauri 2.9** for native desktop applications (Windows, macOS, Linux)
-- 🎨 **Tailwind CSS v4** with CSS variables and dark mode support
-- 🧩 **shadcn/ui** component library with Radix UI primitives
-- 📦 **Zustand** for lightweight state management
-- 🔤 **Geist Font** optimized with next/font
-- 🎯 **TypeScript** for type safety
-- 🎭 **Lucide Icons** for beautiful iconography
-- 📱 Dual deployment: Web app OR Desktop app from the same codebase
+- Provides tourist-side flows for login, registration, password reset, and OAuth callbacks.
+- Provides user-side flows for homepage overview, profile side panels, profile editing, avatar upload/cropping, and safety settings entry.
+- Supports both web runtime (`pnpm dev`) and desktop runtime (`pnpm tauri dev`) from the same codebase.
+- Builds as a static-exported Next.js app so Tauri can load `out/` in production.
+- Uses the existing SAST Link backend through `NEXT_PUBLIC_API_BASE_URL`, with optional MSW mocking for local development.
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- TypeScript (strict mode)
+- Tailwind CSS v4
+- shadcn/ui + Radix primitives
+- Zustand for client-side state
+- SWR for client-side data fetching defaults
+- Axios for API access
+- React Hook Form + validation helpers
+- Jest 30 + Testing Library + MSW
+- Tauri 2 desktop wrapper
+
+## Current Product Flows
+
+### Tourist routes
+
+- `/` account switcher / quick-login entry
+- `/login` two-step password login
+- `/register` four-step registration flow
+- `/reset` four-step password reset flow
+- `/callback/feishu` Feishu OAuth callback
+- `/callback/github` GitHub OAuth callback
+
+### User routes
+
+- `/home` homepage overview with profile summary, quick actions, and app links
+- `/home/edit` profile editing and avatar cropping/upload
+- `/home/edit/safety` safety settings page
+
+### Layout and access model
+
+- `app/(tourist)/layout.tsx` wraps unauthenticated pages with the shared background layout.
+- `app/(user)/layout.tsx` redirects to `/login` when no token is present.
+- `app/(user)/home/layout.tsx` fetches profile state and composes the top bar plus side panels.
+
+## Repository Structure
+
+```text
+sast-link-next/
+├── app/                         # App Router routes, layouts, providers, page tests
+│   ├── page.tsx                 # Account switcher / root entry
+│   ├── providers.tsx            # SWR config + optional MSW bootstrap + global message panel
+│   ├── (tourist)/               # Login / register / reset / OAuth callback flows
+│   └── (user)/                  # Authenticated homepage and edit flows
+├── components/
+│   ├── account/                 # Account switcher UI
+│   ├── animation/               # Page transition helpers
+│   ├── auth/                    # Auth-related reusable inputs/widgets
+│   ├── feedback/                # Global message panel
+│   ├── icons/                   # Brand/logo icons
+│   ├── layout/                  # Shared backgrounds, footer, top bar
+│   ├── navigation/              # Back button
+│   ├── profile/                 # Profile bind items
+│   └── ui/                      # shadcn/ui-style primitives
+├── hooks/
+│   └── use-fetch-profile.ts     # Loads and syncs authenticated profile data
+├── lib/
+│   ├── api/                     # Axios client and auth/user/oauth API wrappers
+│   ├── constants/               # Shared constants
+│   ├── validations/             # Form validation rules
+│   ├── token.ts                 # Token persistence helpers
+│   └── message.ts               # Global toast/message facade
+├── mocks/                       # MSW setup used when NEXT_PUBLIC_API_MOCKING=true
+├── public/                      # Static assets and generated MSW worker
+├── src-tauri/                   # Tauri desktop shell and build config
+├── store/                       # Zustand stores
+├── tests/                       # Shared test helpers / higher-level tests
+├── .github/workflows/           # CI/CD, test, deploy, release, and Tauri build workflows
+├── TESTING.md                   # Test strategy and commands
+├── CI_CD.md                     # GitHub Actions workflow guide
+└── CONTRIBUTING.md              # Contribution workflow
+```
+
+## Important Runtime Modules
+
+### State stores
+
+- `store/use-auth-store.ts`: logged-in user identity, login ticket, redirect target, logout behavior.
+- `store/use-user-list-store.ts`: remembered accounts for root-page switching.
+- `store/use-user-profile-store.ts`: editable profile state used on homepage and edit pages.
+- `store/use-panel-store.ts`: homepage side-panel open state.
+
+### API modules
+
+- `lib/api/client.ts`: shared Axios instance, reads `NEXT_PUBLIC_API_BASE_URL`, injects `Token` header automatically.
+- `lib/api/auth.ts`: verify account, send mail, captcha verification, register, reset password, OAuth callbacks.
+- `lib/api/user.ts`: login, logout, profile retrieval/update, avatar upload, bind status.
+
+### Desktop integration
+
+- `next.config.ts` uses `output: "export"` so `pnpm build` emits `out/`.
+- `src-tauri/tauri.conf.json` points `frontendDist` to `../out` and runs `pnpm dev` / `pnpm build` automatically before Tauri commands.
+- `src-tauri/src/lib.rs` enables `tauri-plugin-log` in debug builds.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+### Required for all development
 
-### For Web Development
+- Node.js 20 or newer
+- pnpm 10 is what CI uses; local pnpm 8+ can work, but matching CI is recommended
 
-- **Node.js** 20.x or later ([Download](https://nodejs.org/))
-- **pnpm** 8.x or later (recommended) or npm/yarn
+### Required for desktop development
 
-  ```bash
-  npm install -g pnpm
-  ```
-
-### For Desktop Development (Additional Requirements)
-
-- **Rust** 1.70 or later ([Install](https://www.rust-lang.org/tools/install))
-
-  ```bash
-  # Verify installation
-  rustc --version
-  cargo --version
-  ```
-
-- **System Dependencies** (varies by OS):
-  - **Windows**: Microsoft Visual Studio C++ Build Tools
-  - **macOS**: Xcode Command Line Tools
-  - **Linux**: See [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites)
+- Rust toolchain (`rustup`, `cargo`, `rustc`)
+- Tauri platform dependencies
+  - Windows: Visual Studio C++ Build Tools + WebView2-capable environment
+  - macOS: Xcode Command Line Tools
+  - Linux: WebKitGTK and related packages used in `.github/workflows/build-tauri.yml`
 
 ## Installation
 
-1. **Clone the repository**
+```bash
+pnpm install
+```
 
-   ```bash
-   git clone <your-repo-url>
-   cd react-quick-starter
-   ```
+Create a local environment file if you need to point at a backend or enable mocks:
 
-2. **Install dependencies**
+```env
+NEXT_PUBLIC_API_BASE_URL=http://118.25.23.101:8081/api/v1
+NEXT_PUBLIC_API_MOCKING=false
+```
 
-   ```bash
-   pnpm install
-   # or
-   npm install
-   # or
-   yarn install
-   ```
+Notes:
 
-3. **Verify installation**
+- `.env*` files are ignored by git.
+- Set `NEXT_PUBLIC_API_MOCKING=true` to bootstrap MSW from `app/providers.tsx`.
+- The checked-in `.env.example` documents the two supported public env vars today.
 
-   ```bash
-   # Check if Next.js is ready
-   pnpm dev
+## Development Commands
 
-   # Check if Tauri is ready (optional, for desktop development)
-   pnpm tauri info
-   ```
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Start the Next.js web app on port 3000 |
+| `pnpm build` | Create the static export consumed by Tauri in production |
+| `pnpm start` | Start the Next.js production server |
+| `pnpm lint` | Run ESLint |
+| `pnpm test` | Run the Jest suite |
+| `pnpm test:watch` | Run Jest in watch mode |
+| `pnpm test:coverage` | Run Jest with coverage output |
+| `pnpm tauri dev` | Start the desktop shell with the web app in dev mode |
+| `pnpm tauri build` | Build desktop installers/bundles |
+| `pnpm tauri info` | Print local Tauri environment information |
 
-## Development
+## Typical Local Workflows
 
-### Web Application Development
-
-#### Start Development Server
+### Web-only development
 
 ```bash
 pnpm dev
-# or
-npm run dev
 ```
 
-This starts the Next.js development server at [http://localhost:3000](http://localhost:3000). The page auto-reloads when you edit files.
+Open `http://localhost:3000` and exercise:
 
-#### Key Development Files
+- `/` for stored-account switching
+- `/login`, `/register`, `/reset`
+- `/home` after authenticating or mocking data
 
-- `app/page.tsx` - Main landing page
-- `app/layout.tsx` - Root layout with global configuration
-- `app/globals.css` - Global styles and Tailwind configuration
-- `components/ui/` - Reusable UI components (shadcn/ui)
-- `lib/utils.ts` - Utility functions
-
-### Desktop Application Development
-
-#### Start Tauri Development Mode
+### Desktop development
 
 ```bash
 pnpm tauri dev
 ```
 
-This command:
+This runs the Next.js dev server first, then launches the Tauri window that points at it.
 
-1. Starts the Next.js development server
-2. Launches the Tauri desktop application
-3. Enables hot-reload for both frontend and Rust code
-
-#### Tauri Development Files
-
-- `src-tauri/src/main.rs` - Main Rust application entry point
-- `src-tauri/src/lib.rs` - Rust library code
-- `src-tauri/tauri.conf.json` - Tauri configuration
-- `src-tauri/Cargo.toml` - Rust dependencies
-
-## Available Scripts
-
-### Frontend Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start Next.js development server on port 3000 |
-| `pnpm build` | Build Next.js app for production (outputs to `out/` directory) |
-| `pnpm start` | Start Next.js production server (after `pnpm build`) |
-| `pnpm lint` | Run ESLint to check code quality |
-| `pnpm lint --fix` | Auto-fix ESLint issues |
-
-### Tauri (Desktop) Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm tauri dev` | Start Tauri development mode with hot-reload |
-| `pnpm tauri build` | Build production desktop application |
-| `pnpm tauri info` | Display Tauri environment information |
-| `pnpm tauri icon` | Generate app icons from source image |
-| `pnpm tauri --help` | Show all available Tauri commands |
-
-### Adding UI Components (shadcn/ui)
+### Production verification
 
 ```bash
-# Add a new component (e.g., Card)
-pnpm dlx shadcn@latest add card
-
-# Add multiple components
-pnpm dlx shadcn@latest add button card dialog
-```
-
-## Project Structure
-
-```
-react-quick-starter/
-├── app/                      # Next.js App Router
-│   ├── layout.tsx           # Root layout with fonts and metadata
-│   ├── page.tsx             # Main landing page
-│   ├── globals.css          # Global styles and Tailwind config
-│   └── favicon.ico          # App favicon
-├── components/              # React components
-│   └── ui/                  # shadcn/ui components (Button, etc.)
-├── lib/                     # Utility functions
-│   └── utils.ts            # Helper functions (cn, etc.)
-├── public/                  # Static assets (images, SVGs)
-├── src-tauri/              # Tauri desktop application
-│   ├── src/
-│   │   ├── main.rs         # Rust main entry point
-│   │   └── lib.rs          # Rust library code
-│   ├── icons/              # Desktop app icons
-│   ├── tauri.conf.json     # Tauri configuration
-│   └── Cargo.toml          # Rust dependencies
-├── components.json          # shadcn/ui configuration
-├── next.config.ts          # Next.js configuration
-├── tailwind.config.ts      # Tailwind CSS configuration
-├── tsconfig.json           # TypeScript configuration
-├── eslint.config.mjs       # ESLint configuration
-└── package.json            # Node.js dependencies and scripts
-```
-
-## Configuration
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory for environment-specific variables:
-
-```env
-# Example environment variables
-NEXT_PUBLIC_API_URL=https://api.example.com
-NEXT_PUBLIC_APP_NAME=React Quick Starter
-
-# Private variables (not exposed to browser)
-DATABASE_URL=postgresql://...
-API_SECRET_KEY=your-secret-key
-```
-
-**Important**:
-
-- Only variables prefixed with `NEXT_PUBLIC_` are exposed to the browser
-- Never commit `.env.local` to version control
-- Use `.env.example` to document required variables
-
-### Tauri Configuration
-
-Edit `src-tauri/tauri.conf.json` to customize your desktop app:
-
-```json
-{
-  "productName": "react-quick-starter",    // App name
-  "version": "0.1.0",                      // App version
-  "identifier": "com.reactquickstarter.desktop", // Unique app identifier
-  "build": {
-    "frontendDist": "../out",              // Next.js build output
-    "devUrl": "http://localhost:3000"      // Dev server URL
-  },
-  "app": {
-    "windows": [{
-      "title": "react-quick-starter",      // Window title
-      "width": 800,                        // Default width
-      "height": 600,                       // Default height
-      "resizable": true,                   // Allow resizing
-      "fullscreen": false                  // Start fullscreen
-    }]
-  }
-}
-```
-
-### Path Aliases
-
-Configured in `components.json` and `tsconfig.json`:
-
-```typescript
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-```
-
-Available aliases:
-
-- `@/components` → `components/`
-- `@/lib` → `lib/`
-- `@/ui` → `components/ui/`
-- `@/hooks` → `hooks/`
-- `@/utils` → `lib/utils.ts`
-
-### Tailwind CSS Configuration
-
-The project uses Tailwind CSS v4 with:
-
-- CSS variables for theming (defined in `app/globals.css`)
-- Dark mode support via `class` strategy
-- Custom color palette using CSS variables
-- shadcn/ui styling system
-
-## Building for Production
-
-### Build Web Application
-
-```bash
-# Build static export
+pnpm lint
+pnpm test
 pnpm build
-
-# Output directory: out/
-# Deploy the out/ directory to any static hosting service
-```
-
-The build creates a static export in the `out/` directory, optimized for production.
-
-### Build Desktop Application
-
-```bash
-# Build for current platform
 pnpm tauri build
-
-# Output locations:
-# - Windows: src-tauri/target/release/bundle/msi/
-# - macOS: src-tauri/target/release/bundle/dmg/
-# - Linux: src-tauri/target/release/bundle/appimage/
 ```
 
-Build options:
+## Testing
 
-```bash
-# Build for specific target
-pnpm tauri build --target x86_64-pc-windows-msvc
+The repository already has an active Jest setup. Tests live next to source files and cover `app/`, `components/`, `hooks/`, `lib/`, and `store/`.
 
-# Build with debug symbols
-pnpm tauri build --debug
+Examples in the current tree:
 
-# Build without bundling
-pnpm tauri build --bundles none
-```
+- `app/page.test.tsx`
+- `app/(tourist)/login/page.test.tsx`
+- `app/(user)/home/homepage.test.tsx`
+- `components/layout/top-bar.test.tsx`
+- `hooks/use-fetch-profile.test.tsx`
+- `lib/api/auth.test.ts`
+- `store/use-auth-store.test.ts`
 
-## Deployment
+See [TESTING.md](./TESTING.md) for the full testing guide.
 
-### Web Deployment
+## CI/CD Summary
 
-#### Vercel (Recommended)
+GitHub Actions are already configured:
 
-1. Push your code to GitHub/GitLab/Bitbucket
-2. Import project on [Vercel](https://vercel.com/new)
-3. Vercel auto-detects Next.js and deploys
+- `ci.yml` orchestrates quality, test, and Tauri build workflows on pushes/PRs to `master` and `develop`.
+- `quality.yml` runs lint, `tsc --noEmit`, `pnpm audit`, and `pnpm outdated`.
+- `test.yml` runs `pnpm test:coverage`, uploads reports/artifacts, and runs `pnpm build`.
+- `build-tauri.yml` builds unsigned desktop artifacts for Linux, Windows, and macOS.
+- `deploy.yml` exists but is disabled by default.
+- `release.yml` creates a draft GitHub release when a `v*` tag is pushed.
 
-#### Netlify
+See [CI_CD.md](./CI_CD.md) for exact trigger and secret details.
 
-```bash
-# Build command
-pnpm build
+## Notes on Accuracy
 
-# Publish directory
-out
-```
+- The npm package name in `package.json` is still `react-quick-starter`, but the implemented product and runtime metadata are already SAST Link oriented in the app UI and metadata.
+- The app metadata currently comes from `app/layout.tsx` and is set to `title: "SAST Link"` and `description: "OAuth of SAST"`.
+- The desktop bundle metadata in `src-tauri/tauri.conf.json` is still using the starter-style product name and identifier. If those values are changed later, update this README and `README_zh.md` again.
 
-#### Static Hosting (Nginx, Apache, etc.)
+## Related Documents
 
-1. Build the project: `pnpm build`
-2. Upload the `out/` directory to your server
-3. Configure server to serve static files
-
-### Desktop Deployment
-
-#### Windows
-
-- Distribute the `.msi` installer from `src-tauri/target/release/bundle/msi/`
-- Users run the installer to install the application
-
-#### macOS
-
-- Distribute the `.dmg` file from `src-tauri/target/release/bundle/dmg/`
-- Users drag the app to Applications folder
-- **Note**: For distribution outside the App Store, you need to sign the app with an Apple Developer certificate
-
-#### Linux
-
-- Distribute the `.AppImage` from `src-tauri/target/release/bundle/appimage/`
-- Users make it executable and run: `chmod +x app.AppImage && ./app.AppImage`
-- Alternative formats: `.deb` (Debian/Ubuntu), `.rpm` (Fedora/RHEL)
-
-#### Code Signing (Recommended for Production)
-
-- **Windows**: Use a code signing certificate
-- **macOS**: Requires Apple Developer account and certificate
-- **Linux**: Optional, but recommended for distribution
-
-See [Tauri Distribution Guide](https://tauri.app/v1/guides/distribution/) for detailed instructions.
-
-## Development Workflow
-
-### Typical Development Cycle
-
-1. **Start development server**
-
-   ```bash
-   pnpm dev  # For web development
-   # or
-   pnpm tauri dev  # For desktop development
-   ```
-
-2. **Make changes**
-   - Edit files in `app/`, `components/`, or `lib/`
-   - Changes auto-reload in the browser/desktop app
-
-3. **Add new components**
-
-   ```bash
-   pnpm dlx shadcn@latest add [component-name]
-   ```
-
-4. **Lint your code**
-
-   ```bash
-   pnpm lint
-   ```
-
-5. **Build and test**
-
-   ```bash
-   pnpm build  # Test web build
-   pnpm tauri build  # Test desktop build
-   ```
-
-### Best Practices
-
-- **Code Style**: Follow ESLint rules (`pnpm lint`)
-- **Commits**: Use conventional commits (feat:, fix:, docs:, etc.)
-- **Components**: Keep components small and reusable
-- **State**: Use Zustand for global state, React hooks for local state
-- **Styling**: Use Tailwind utility classes, avoid custom CSS when possible
-- **Types**: Leverage TypeScript for type safety
-
-## Troubleshooting
-
-### Common Issues
-
-**Port 3000 already in use**
-
-```bash
-# Kill the process using port 3000
-# Windows
-netstat -ano | findstr :3000
-taskkill /PID <PID> /F
-
-# macOS/Linux
-lsof -ti:3000 | xargs kill -9
-```
-
-**Tauri build fails**
-
-```bash
-# Check Tauri environment
-pnpm tauri info
-
-# Update Rust
-rustup update
-
-# Clean build cache
-cd src-tauri
-cargo clean
-```
-
-**Module not found errors**
-
-```bash
-# Clear Next.js cache
-rm -rf .next
-
-# Reinstall dependencies
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
-```
-
-## Learn More
-
-### Next.js Resources
-
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
-- [Learn Next.js](https://nextjs.org/learn) - Interactive Next.js tutorial
-- [Next.js GitHub](https://github.com/vercel/next.js) - Next.js repository
-
-### Tauri Resources
-
-- [Tauri Documentation](https://tauri.app/) - Official Tauri documentation
-- [Tauri API Reference](https://tauri.app/v1/api/js/) - JavaScript API reference
-- [Tauri GitHub](https://github.com/tauri-apps/tauri) - Tauri repository
-
-### UI & Styling
-
-- [shadcn/ui](https://ui.shadcn.com/) - Component library documentation
-- [Tailwind CSS](https://tailwindcss.com/docs) - Tailwind CSS documentation
-- [Radix UI](https://www.radix-ui.com/) - Radix UI primitives
-
-### State Management
-
-- [Zustand](https://zustand-demo.pmnd.rs/) - Zustand documentation
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## Support
-
-If you encounter any issues or have questions:
-
-- Check the [Troubleshooting](#troubleshooting) section
-- Review [Next.js Documentation](https://nextjs.org/docs)
-- Review [Tauri Documentation](https://tauri.app/)
-- Open an issue on GitHub
+- [README_zh.md](./README_zh.md)
+- [TESTING.md](./TESTING.md)
+- [CI_CD.md](./CI_CD.md)
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [AGENTS.md](./AGENTS.md)

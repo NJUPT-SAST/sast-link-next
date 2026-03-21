@@ -1,0 +1,4 @@
+{
+  "title": "Features",
+  "pages": ["authentication", "registration", "password-reset", "oauth", "user-profile"]
+}

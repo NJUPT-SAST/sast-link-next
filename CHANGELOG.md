@@ -1,44 +1,34 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this repository should be documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the version field should continue following Semantic Versioning if formal releases are published.
 
 ## [Unreleased]
 
 ### Added
-- Initial project setup with Next.js 16 and React 19
-- Tauri 2.9 integration for cross-platform desktop applications
-- Tailwind CSS v4 with CSS variables and dark mode support
-- shadcn/ui component library with Radix UI primitives
-- Zustand for lightweight state management
-- Geist Font optimized with next/font
-- TypeScript configuration with strict mode
-- ESLint configuration for code quality
-- Jest and React Testing Library for testing
-- GitHub Actions CI/CD pipeline
-  - Quality checks (ESLint, TypeScript, security audit)
-  - Test suite with coverage reporting
-  - Tauri desktop builds for Windows, macOS, and Linux
-  - Release workflow for version tags
+
+- Next.js App Router implementation for SAST Link tourist and authenticated flows
+- Two-step login flow
+- Four-step registration flow
+- Four-step password reset flow
+- Feishu and GitHub OAuth callback routes
+- Root-page remembered-account switcher
+- Authenticated homepage overview and side-panel composition
+- Profile editing, avatar upload, and avatar wheel zoom support
+- Zustand stores for auth, account list, profile state, and homepage panel state
+- Axios-based API client and auth/user API wrappers
+- Jest 30 + Testing Library + MSW test setup
+- GitHub Actions workflows for quality checks, coverage runs, static export build, Tauri builds, and draft releases
+
+### Changed
+
+- Documentation has been rewritten to match the current repository implementation rather than the original generic starter-template description
 
 ### Documentation
-- Comprehensive README with installation and usage instructions
-- Chinese documentation (README_zh.md)
-- CI/CD setup guide (CI_CD.md)
-- Testing guide (TESTING.md)
-- AI assistant instructions (AGENTS.md, CLAUDE.md, GEMINI.md)
 
-## [0.1.0] - 2024-01-28
-
-### Added
-- Initial release
-- Next.js 16 App Router setup
-- React 19 with new features support
-- Tauri 2.9 desktop wrapper
-- Basic UI components (Button)
-- Project structure and configuration
-
-[Unreleased]: https://github.com/AstroAir/react-quick-starter/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/AstroAir/react-quick-starter/releases/tag/v0.1.0
+- `README.md` now describes the real routes, modules, environment variables, and build behavior
+- `README_zh.md` has been synced with the same implementation detail in Chinese
+- `CI_CD.md` now reflects the actual workflow files and their enabled/disabled state
+- `TESTING.md` now reflects the active Jest configuration and current test coverage layout
+- `CONTRIBUTING.md` now reflects the actual contribution and validation expectations for this repo

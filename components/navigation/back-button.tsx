@@ -3,16 +3,20 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+
 export function BackButton() {
   const router = useRouter();
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-fit text-muted-foreground"
       onClick={() => router.back()}
-      className="flex w-full cursor-pointer items-center gap-5 p-0 text-[#808080]"
     >
-      <ArrowLeft size={20} />
-      Back
-    </button>
+      <ArrowLeft size={16} />
+      返回
+    </Button>
   );
 }

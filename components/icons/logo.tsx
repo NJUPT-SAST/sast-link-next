@@ -13,7 +13,7 @@ export function Logo() {
         fontFamily="system-ui, -apple-system, sans-serif"
         fontSize="18"
         fontWeight="700"
-        fill="#1c1f23"
+        fill="currentColor"
       >
         SAST Link
       </text>

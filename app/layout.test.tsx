@@ -27,4 +27,12 @@ describe("RootLayout", () => {
     expect(markup).toContain("antialiased");
     expect(markup).toContain("<main>content</main>");
   });
+
+  it("marks the root html element to tolerate client theme hydration", () => {
+    const tree = RootLayout({
+      children: <main>content</main>,
+    });
+
+    expect(tree.props.suppressHydrationWarning).toBe(true);
+  });
 });

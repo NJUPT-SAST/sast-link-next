@@ -1,0 +1,79 @@
+---
+title: CI/CD
+description: 质量检查、测试、Tauri 构建、部署与发布的 GitHub Actions 工作流
+---
+
+## 概述
+
+所有 CI/CD 均运行在 GitHub Actions 上，工作流定义于 `.github/workflows/`。
+
+## quality.yml
+
+在每次向 `master` 的推送和 PR 上触发。
+
+步骤：
+1. 检出代码。
+2. 安装 pnpm 和 Node.js。
+3. 执行 `pnpm install`。
+4. 执行 `pnpm lint`，存在 ESLint 错误时工作流失败。
+5. 执行 `pnpm exec tsc --noEmit`，存在 TypeScript 类型错误时失败。
+
+此工作流在任何合并前强制执行基础代码质量要求。
+
+## test.yml
+
+在每次向 `master` 的推送和 PR 上触发。
+
+步骤：
+1. 检出代码。
+2. 安装 pnpm 和 Node.js。
+3. 执行 `pnpm install`。
+4. 执行 `pnpm test:coverage`，未达到覆盖率阈值时失败。
+5. 执行 `pnpm build`，验证静态导出能否生成有效的 `out/` 目录。
+
+## build-tauri.yml
+
+手动触发或在发布标签（`v*`）时触发，并行构建四个平台的原生安装包：
+
+| 平台 | Runner | 产物格式 |
+|---|---|---|
+| Windows | `windows-latest` | NSIS 安装器、MSI |
+| macOS（Intel）| `macos-13` | DMG、App Bundle |
+| macOS（Apple Silicon）| `macos-latest` | DMG、App Bundle |
+| Linux | `ubuntu-22.04` | AppImage、DEB |
+
+每个任务：
+1. 安装 Rust 工具链（stable）及平台系统依赖。
+2. 安装 pnpm 和 Node.js。
+3. 执行 `pnpm install`。
+4. 执行 `pnpm tauri build`（内部通过 `beforeBuildCommand` 先执行 `pnpm build`）。
+5. 将构建产物上传为工作流 Artifact。
+
+## deploy.yml（可选）
+
+用于将 Web 应用部署至静态托管服务的可选工作流，默认未启用。启用前须在仓库 Secrets 中配置目标主机与凭据。
+
+## release.yml
+
+在匹配 `v*` 的标签（如 `v1.0.0`）上触发。
+
+步骤：
+1. 为所有四个平台运行 `build-tauri.yml`。
+2. 下载所有安装包 Artifact。
+3. 以标签名创建 GitHub Release，并将所有安装包作为 Release 资产上传。
+
+## 所需 Secrets
+
+| Secret | 使用方 | 说明 |
+|---|---|---|
+| `GITHUB_TOKEN` | 所有工作流 | GitHub Actions 自动提供 |
+| 部署凭据 | `deploy.yml` | 因目标主机而异，使用 deploy 工作流时配置 |
+
+## 状态徽章
+
+在 `README.md` 中使用以下格式添加工作流状态徽章：
+
+```
+![Quality](https://github.com/SAST-Link/sast-link-next/actions/workflows/quality.yml/badge.svg)
+![Test](https://github.com/SAST-Link/sast-link-next/actions/workflows/test.yml/badge.svg)
+```
