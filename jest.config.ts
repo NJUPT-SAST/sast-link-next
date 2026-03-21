@@ -186,7 +186,7 @@ const config: Config = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: [],
+  setupFiles: ["<rootDir>/jest.polyfills.ts"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
@@ -198,10 +198,12 @@ const config: Config = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "jsdom",
+  testEnvironment: "jest-fixed-jsdom",
 
   // Options that will be passed to the testEnvironment
-  // testEnvironmentOptions: {},
+  testEnvironmentOptions: {
+    customExportConditions: [""],
+  },
 
   // Adds a location field to test results
   // testLocationInResults: false,
@@ -233,10 +235,7 @@ const config: Config = {
   // transform: undefined,
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-  // transformIgnorePatterns: [
-  //   "\\\\node_modules\\\\",
-  //   "\\.pnp\\.[^\\\\]+$"
-  // ],
+  // transformIgnorePatterns: [],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
@@ -251,4 +250,16 @@ const config: Config = {
   // watchman: true,
 };
 
-export default createJestConfig(config);
+// Post-process to override next/jest's transformIgnorePatterns with until-async
+const baseConfig = createJestConfig(config);
+const customConfig: () => Promise<Config> = async () => {
+  const resolved = await baseConfig();
+  // Replace next/jest's patterns with ones that also allow until-async
+  resolved.transformIgnorePatterns = [
+    "\\\\node_modules\\\\(?!.pnpm)(?!(geist|until-async)\\\\)",
+    "\\\\node_modules\\\\.pnpm\\\\(?!(geist|until-async)@)",
+    "^.+\\.module\\.(css|sass|scss)$",
+  ];
+  return resolved;
+};
+export default customConfig;

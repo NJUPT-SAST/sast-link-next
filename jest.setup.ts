@@ -50,3 +50,14 @@ jest.mock('next/navigation', () => ({
 //   warn: jest.fn(),
 // };
 
+// MSW server for API mocking in tests
+import { server } from "@/mocks/server";
+import { resetTickets } from "@/mocks/data/tickets";
+
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterEach(() => {
+  server.resetHandlers();
+  resetTickets();
+});
+afterAll(() => server.close());
+
