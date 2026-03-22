@@ -19,7 +19,7 @@ The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.
 - Zustand stores for auth, account list, profile state, and homepage panel state
 - Axios-based API client and auth/user API wrappers
 - Jest 30 + Testing Library + MSW test setup
-- GitHub Actions workflows for quality checks, coverage runs, static export build, Tauri builds, and draft releases
+- GitHub Actions workflows for quality checks, coverage runs, static export build, and draft releases
 
 ### Changed
 

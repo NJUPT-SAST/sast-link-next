@@ -1,6 +1,6 @@
 ---
 title: CI/CD
-description: GitHub Actions workflows for quality, testing, Tauri builds, deployment, and releases
+description: GitHub Actions workflows for quality, testing, deployment, and releases
 ---
 
 ## Overview
@@ -9,69 +9,51 @@ All CI/CD runs on GitHub Actions. Workflows are defined in `.github/workflows/`.
 
 ## quality.yml
 
-Triggered on every push and pull request to `master`.
+Triggered through `ci.yml` and runnable manually.
 
 Steps:
 1. Checkout code.
 2. Install pnpm and Node.js.
 3. Run `pnpm install`.
-4. Run `pnpm lint` — fails the workflow on any ESLint error.
-5. Run `pnpm exec tsc --noEmit` — fails on any TypeScript type error.
-
-This workflow enforces baseline code quality before any merge.
+4. Run `pnpm lint`.
+5. Run `pnpm exec tsc --noEmit`.
 
 ## test.yml
 
-Triggered on every push and pull request to `master`.
+Triggered through `ci.yml` and runnable manually.
 
 Steps:
 1. Checkout code.
 2. Install pnpm and Node.js.
 3. Run `pnpm install`.
-4. Run `pnpm test:coverage` — fails if coverage thresholds are not met.
-5. Run `pnpm build` — verifies the static export produces a valid `out/` directory.
-
-## build-tauri.yml
-
-Triggered manually or on release tags (`v*`). Builds native installers for four platforms in parallel:
-
-| Platform | Runner | Output |
-|---|---|---|
-| Windows | `windows-latest` | NSIS installer, MSI |
-| macOS (Intel) | `macos-13` | DMG, app bundle |
-| macOS (Apple Silicon) | `macos-latest` | DMG, app bundle |
-| Linux | `ubuntu-22.04` | AppImage, DEB |
-
-Each job:
-1. Installs the Rust toolchain (stable) and system dependencies for the platform.
-2. Installs pnpm and Node.js.
-3. Runs `pnpm install`.
-4. Runs `pnpm tauri build` (which internally runs `pnpm build` first via `beforeBuildCommand`).
-5. Uploads the built installers as workflow artifacts.
+4. Run `pnpm test:coverage`.
+5. Run `pnpm build`.
+6. Upload coverage and `out/` artifacts.
 
 ## deploy.yml (optional)
 
-An optional workflow for deploying the web application to a static host. Not active by default — configure the target host and credentials in repository secrets before enabling.
+Optional deployment workflow for static hosting. Disabled by default until repository secrets and target environment are configured.
 
 ## release.yml
 
-Triggered on tags matching `v*` (e.g., `v1.0.0`).
+Triggered on tags matching `v*` (for example, `v1.0.0`).
 
 Steps:
-1. Runs `build-tauri.yml` for all four platforms.
-2. Downloads all installer artifacts.
-3. Creates a GitHub Release with the tag name and uploads all installers as release assets.
+1. Run `quality.yml`.
+2. Run `test.yml`.
+3. Download workflow artifacts.
+4. Create a draft GitHub Release and attach build artifacts.
 
 ## Required secrets
 
 | Secret | Used by | Description |
 |---|---|---|
 | `GITHUB_TOKEN` | All workflows | Automatically provided by GitHub Actions |
-| Deploy credentials | `deploy.yml` | Varies by target host; configure if using deploy workflow |
+| Deploy credentials | `deploy.yml` | Varies by host; configure only if deploy workflow is enabled |
 
 ## Status badges
 
-Add workflow status badges to `README.md` using the format:
+Add workflow status badges to `README.md` using:
 
 ```
 ![Quality](https://github.com/SAST-Link/sast-link-next/actions/workflows/quality.yml/badge.svg)

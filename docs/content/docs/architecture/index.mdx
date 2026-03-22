@@ -5,17 +5,12 @@ description: High-level design decisions in sast-link-next
 
 ## Summary
 
-sast-link-next is a Next.js 16 application that runs in two modes:
-
-- **Web mode** (`pnpm dev` / `pnpm build`): a standard Next.js application served over HTTP.
-- **Desktop mode** (`pnpm tauri dev` / `pnpm tauri build`): the same static export loaded by a Tauri 2 WebView shell, producing native installers for Windows, macOS, and Linux.
-
-Both modes share an identical codebase. The only runtime difference is how the HTML/JS/CSS assets are served.
+sast-link-next is a Next.js 16 web application delivered as a static export (`pnpm build` -> `out/`).
 
 ## Layer structure
 
 ```
-Browser / WebView
+Browser
     |
 Next.js App Router (app/)
     |
@@ -47,7 +42,7 @@ Backend API (NEXT_PUBLIC_API_BASE_URL)
 - Server-side features that require a running Node.js server (Route Handlers with runtime state, Server Actions with side effects beyond static generation) are not used.
 - The `images.unoptimized: true` flag is required because the built-in Next.js Image Optimization API is a server-side feature.
 
-This constraint exists because Tauri loads the application from `out/` as local files rather than from a server.
+This constraint comes from static-export delivery in the current deployment model.
 
 ### Route groups
 
@@ -80,6 +75,5 @@ The MSW handlers in `mocks/handlers/` maintain in-memory state (tickets, users) 
 
 <Cards>
   <Card title="Routing" href="/docs/architecture/routing" description="Route groups, parallel routes, and layout hierarchy" />
-  <Card title="Dual Runtime" href="/docs/architecture/dual-runtime" description="How Tauri integrates with the Next.js static export" />
   <Card title="Styling" href="/docs/architecture/styling" description="Tailwind v4, CSS variables, and component patterns" />
 </Cards>

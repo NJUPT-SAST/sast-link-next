@@ -12,7 +12,7 @@ All commands are run from the repository root unless noted otherwise.
 pnpm dev
 
 # Build the application as a static export to the out/ directory
-# Required before running pnpm tauri build; also used in CI
+# Used in CI and static deployment
 pnpm build
 
 # Serve the previously built static export (requires pnpm build first)
@@ -43,21 +43,6 @@ pnpm test:watch
 pnpm test:coverage
 ```
 
-## Tauri desktop
-
-```bash
-# Start the Tauri desktop application in development mode.
-# Internally runs pnpm dev (beforeDevCommand) and then opens the WebView.
-pnpm tauri dev
-
-# Build the Tauri desktop installer for the current platform.
-# Internally runs pnpm build (beforeBuildCommand) to generate out/ first.
-pnpm tauri build
-
-# Print Tauri environment info (Rust toolchain, OS, WebView version, etc.)
-pnpm tauri info
-```
-
 ## shadcn/ui components
 
 ```bash
@@ -81,12 +66,4 @@ pnpm build
 
 ## Build output
 
-`pnpm build` (main app) produces a fully static site in `out/`. This is the directory that Tauri loads in production via `src-tauri/tauri.conf.json`:
-
-```json
-{
-  "build": {
-    "frontendDist": "../out"
-  }
-}
-```
+`pnpm build` (main app) produces a fully static site in `out/`.

@@ -8,7 +8,7 @@ export default function HomePage() {
         Identity and account management platform for the Software Association of Science and Technology.
       </p>
       <p className="text-fd-muted-foreground mb-8 max-w-xl">
-        This documentation covers the <code>sast-link-next</code> implementation: a Next.js 16 application with Tauri 2 desktop packaging.
+        This documentation covers the <code>sast-link-next</code> implementation as a Next.js 16 web application.
       </p>
       <div className="flex gap-4 flex-wrap justify-center">
         <Link

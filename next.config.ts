@@ -1,12 +1,6 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const isProd = process.env.NODE_ENV === "production";
-
-const internalHost = process.env.TAURI_DEV_HOST || "localhost";
-
-// Enable static export for Tauri production builds.
-// This makes `pnpm build` generate the `out/` directory that Tauri loads from `src-tauri/tauri.conf.json` (frontendDist: "../out").
 const nextConfig: NextConfig = {
   output: "export",
   turbopack: {
@@ -25,8 +19,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Configure assetPrefix or else the server won't properly resolve your assets.
-  assetPrefix: isProd ? undefined : `http://${internalHost}:3000`,
 };
 
 export default nextConfig;

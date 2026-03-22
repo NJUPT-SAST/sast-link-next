@@ -1,6 +1,6 @@
 # SAST Link Next
 
-SAST Link Next is the current Next.js + Tauri implementation of the SAST Link account system. It is no longer a generic starter template: the repository already contains the migrated authentication flows, account switcher, user homepage, profile editing, avatar cropping, desktop packaging, Jest tests, and GitHub Actions workflows.
+SAST Link Next is the current Next.js implementation of the SAST Link account system. It is no longer a generic starter template: the repository already contains the migrated authentication flows, account switcher, user homepage, profile editing, avatar cropping, Jest tests, and GitHub Actions workflows.
 
 [中文文档](./README_zh.md)
 
@@ -8,8 +8,7 @@ SAST Link Next is the current Next.js + Tauri implementation of the SAST Link ac
 
 - Provides tourist-side flows for login, registration, password reset, and OAuth callbacks.
 - Provides user-side flows for homepage overview, profile side panels, profile editing, avatar upload/cropping, and safety settings entry.
-- Supports both web runtime (`pnpm dev`) and desktop runtime (`pnpm tauri dev`) from the same codebase.
-- Builds as a static-exported Next.js app so Tauri can load `out/` in production.
+- Uses web runtime (`pnpm dev`) and static-export build (`pnpm build`) as the main delivery model.
 - Uses the existing SAST Link backend through `NEXT_PUBLIC_API_BASE_URL`, with optional MSW mocking for local development.
 
 ## Tech Stack
@@ -24,7 +23,6 @@ SAST Link Next is the current Next.js + Tauri implementation of the SAST Link ac
 - Axios for API access
 - React Hook Form + validation helpers
 - Jest 30 + Testing Library + MSW
-- Tauri 2 desktop wrapper
 
 ## Current Product Flows
 
@@ -78,10 +76,9 @@ sast-link-next/
 │   └── message.ts               # Global toast/message facade
 ├── mocks/                       # MSW setup used when NEXT_PUBLIC_API_MOCKING=true
 ├── public/                      # Static assets and generated MSW worker
-├── src-tauri/                   # Tauri desktop shell and build config
 ├── store/                       # Zustand stores
 ├── tests/                       # Shared test helpers / higher-level tests
-├── .github/workflows/           # CI/CD, test, deploy, release, and Tauri build workflows
+├── .github/workflows/           # CI/CD, test, deploy, and release workflows
 ├── TESTING.md                   # Test strategy and commands
 ├── CI_CD.md                     # GitHub Actions workflow guide
 └── CONTRIBUTING.md              # Contribution workflow
@@ -102,11 +99,9 @@ sast-link-next/
 - `lib/api/auth.ts`: verify account, send mail, captcha verification, register, reset password, OAuth callbacks.
 - `lib/api/user.ts`: login, logout, profile retrieval/update, avatar upload, bind status.
 
-### Desktop integration
+### Build integration
 
 - `next.config.ts` uses `output: "export"` so `pnpm build` emits `out/`.
-- `src-tauri/tauri.conf.json` points `frontendDist` to `../out` and runs `pnpm dev` / `pnpm build` automatically before Tauri commands.
-- `src-tauri/src/lib.rs` enables `tauri-plugin-log` in debug builds.
 
 ## Prerequisites
 
@@ -114,14 +109,6 @@ sast-link-next/
 
 - Node.js 20 or newer
 - pnpm 10 is what CI uses; local pnpm 8+ can work, but matching CI is recommended
-
-### Required for desktop development
-
-- Rust toolchain (`rustup`, `cargo`, `rustc`)
-- Tauri platform dependencies
-  - Windows: Visual Studio C++ Build Tools + WebView2-capable environment
-  - macOS: Xcode Command Line Tools
-  - Linux: WebKitGTK and related packages used in `.github/workflows/build-tauri.yml`
 
 ## Installation
 
@@ -147,15 +134,12 @@ Notes:
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Start the Next.js web app on port 3000 |
-| `pnpm build` | Create the static export consumed by Tauri in production |
+| `pnpm build` | Create the static export in `out/` |
 | `pnpm start` | Start the Next.js production server |
 | `pnpm lint` | Run ESLint |
 | `pnpm test` | Run the Jest suite |
 | `pnpm test:watch` | Run Jest in watch mode |
 | `pnpm test:coverage` | Run Jest with coverage output |
-| `pnpm tauri dev` | Start the desktop shell with the web app in dev mode |
-| `pnpm tauri build` | Build desktop installers/bundles |
-| `pnpm tauri info` | Print local Tauri environment information |
 
 ## Typical Local Workflows
 
@@ -171,21 +155,12 @@ Open `http://localhost:3000` and exercise:
 - `/login`, `/register`, `/reset`
 - `/home` after authenticating or mocking data
 
-### Desktop development
-
-```bash
-pnpm tauri dev
-```
-
-This runs the Next.js dev server first, then launches the Tauri window that points at it.
-
 ### Production verification
 
 ```bash
 pnpm lint
 pnpm test
 pnpm build
-pnpm tauri build
 ```
 
 ## Testing
@@ -208,10 +183,9 @@ See [TESTING.md](./TESTING.md) for the full testing guide.
 
 GitHub Actions are already configured:
 
-- `ci.yml` orchestrates quality, test, and Tauri build workflows on pushes/PRs to `master` and `develop`.
+- `ci.yml` orchestrates quality and test workflows on pushes/PRs to `master` and `develop`.
 - `quality.yml` runs lint, `tsc --noEmit`, `pnpm audit`, and `pnpm outdated`.
 - `test.yml` runs `pnpm test:coverage`, uploads reports/artifacts, and runs `pnpm build`.
-- `build-tauri.yml` builds unsigned desktop artifacts for Linux, Windows, and macOS.
 - `deploy.yml` exists but is disabled by default.
 - `release.yml` creates a draft GitHub release when a `v*` tag is pushed.
 
@@ -221,7 +195,6 @@ See [CI_CD.md](./CI_CD.md) for exact trigger and secret details.
 
 - The npm package name in `package.json` is still `react-quick-starter`, but the implemented product and runtime metadata are already SAST Link oriented in the app UI and metadata.
 - The app metadata currently comes from `app/layout.tsx` and is set to `title: "SAST Link"` and `description: "OAuth of SAST"`.
-- The desktop bundle metadata in `src-tauri/tauri.conf.json` is still using the starter-style product name and identifier. If those values are changed later, update this README and `README_zh.md` again.
 
 ## Related Documents
 

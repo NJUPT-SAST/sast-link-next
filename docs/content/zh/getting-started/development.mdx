@@ -12,7 +12,7 @@ description: 全部可用的 pnpm 脚本及其说明
 pnpm dev
 
 # 将应用构建为静态产物，输出至 out/ 目录
-# pnpm tauri build 执行前必须先运行此命令；CI 中同样会用到
+# CI 与静态部署都会用到
 pnpm build
 
 # 启动已构建的静态产物（需先执行 pnpm build）
@@ -43,21 +43,6 @@ pnpm test:watch
 pnpm test:coverage
 ```
 
-## Tauri 桌面端
-
-```bash
-# 以开发模式启动 Tauri 桌面应用。
-# 内部先执行 pnpm dev（beforeDevCommand），再打开 WebView。
-pnpm tauri dev
-
-# 为当前平台构建 Tauri 桌面安装包。
-# 内部先执行 pnpm build（beforeBuildCommand）生成 out/ 目录。
-pnpm tauri build
-
-# 打印 Tauri 环境信息（Rust 工具链、操作系统、WebView 版本等）
-pnpm tauri info
-```
-
 ## shadcn/ui 组件
 
 ```bash
@@ -81,12 +66,4 @@ pnpm build
 
 ## 构建产物
 
-主应用的 `pnpm build` 会在 `out/` 目录生成完整的静态站点。Tauri 在生产环境通过 `src-tauri/tauri.conf.json` 加载该目录：
-
-```json
-{
-  "build": {
-    "frontendDist": "../out"
-  }
-}
-```
+主应用的 `pnpm build` 会在 `out/` 目录生成完整的静态站点。

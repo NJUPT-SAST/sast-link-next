@@ -13,22 +13,18 @@
 - `lib/` contains shared runtime logic, especially `lib/api/`, validation helpers, token helpers, and message helpers.
 - `store/` contains Zustand state stores.
 - `public/` contains static assets and the generated MSW worker.
-- `src-tauri/` contains the Tauri desktop wrapper, Rust entrypoints, and packaging config.
 - Root configs include `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `components.json`, and `jest.config.ts`.
 
 ## Build, Test, and Development Commands
 
 - `pnpm dev` — Run Next.js in development.
-- `pnpm build` — Create the static-export production build consumed by Tauri.
+- `pnpm build` — Create the static-export production build.
 - `pnpm start` — Serve the production build through Next.js.
 - `pnpm lint` — Run ESLint.
 - `pnpm test` — Run the Jest suite.
 - `pnpm test:watch` — Run Jest in watch mode.
 - `pnpm test:coverage` — Run Jest with coverage output.
 - `pnpm exec tsc --noEmit` — Run TypeScript type checking.
-- `pnpm tauri dev` — Launch the desktop app in development mode.
-- `pnpm tauri build` — Build desktop binaries.
-- `pnpm tauri info` — Inspect local Tauri tooling/environment.
 
 ## Coding Style & Naming Conventions
 
@@ -61,4 +57,3 @@
 - Only expose safe client values via `NEXT_PUBLIC_*`.
 - `NEXT_PUBLIC_API_BASE_URL` configures the backend base URL.
 - `NEXT_PUBLIC_API_MOCKING=true` enables MSW-backed API mocking in the app provider layer.
-- Tauri uses `src-tauri/tauri.conf.json` with `frontendDist: "../out"`, so keep Next.js static export settings aligned with desktop packaging.

@@ -1,6 +1,6 @@
 # SAST Link Next
 
-这是 SAST Link 账户系统当前的 Next.js + Tauri 实现仓库。它已经不是一个通用 starter 模板，而是包含了已迁移的登录、注册、重置密码、账号切换、主页、资料编辑、头像裁剪上传、桌面打包、Jest 测试和 GitHub Actions 工作流的实际业务项目。
+这是 SAST Link 账户系统当前的 Next.js 实现仓库。它已经不是一个通用 starter 模板，而是包含了已迁移的登录、注册、重置密码、账号切换、主页、资料编辑、头像裁剪上传、Jest 测试和 GitHub Actions 工作流的实际业务项目。
 
 [English Documentation](./README.md)
 
@@ -8,8 +8,7 @@
 
 - 提供游客侧登录、注册、重置密码和 OAuth 回调流程。
 - 提供用户侧主页概览、资料侧边栏、资料编辑、头像裁剪上传和安全设置入口。
-- 同一套代码同时支持 Web 运行时和 Tauri 桌面运行时。
-- 通过 Next.js 静态导出生成 `out/`，供 Tauri 生产构建加载。
+- 当前以 Web 运行时（`pnpm dev`）和静态导出构建（`pnpm build`）为主。
 - 默认通过 `NEXT_PUBLIC_API_BASE_URL` 访问现有 SAST Link 后端，必要时可通过 MSW 进行本地 mock。
 
 ## 技术栈
@@ -24,7 +23,6 @@
 - Axios
 - React Hook Form
 - Jest 30 + Testing Library + MSW
-- Tauri 2
 
 ## 当前产品路由
 
@@ -78,10 +76,9 @@ sast-link-next/
 │   └── message.ts               # 全局提示封装
 ├── mocks/                       # NEXT_PUBLIC_API_MOCKING=true 时启用的 MSW
 ├── public/                      # 静态资源和 MSW worker
-├── src-tauri/                   # Tauri 桌面壳与构建配置
 ├── store/                       # Zustand stores
 ├── tests/                       # 共享测试辅助文件 / 更高层测试
-├── .github/workflows/           # CI/CD、测试、部署、发布、Tauri 构建工作流
+├── .github/workflows/           # CI/CD、测试、部署、发布工作流
 ├── TESTING.md                   # 测试说明
 ├── CI_CD.md                     # GitHub Actions 说明
 └── CONTRIBUTING.md              # 协作贡献说明
@@ -102,11 +99,9 @@ sast-link-next/
 - `lib/api/auth.ts`：账号校验、邮件发送、验证码校验、注册、重置密码、OAuth 回调。
 - `lib/api/user.ts`：登录、登出、资料获取/修改、头像上传、绑定状态查询。
 
-### 桌面集成
+### 构建集成
 
 - `next.config.ts` 使用 `output: "export"`，使 `pnpm build` 生成 `out/`。
-- `src-tauri/tauri.conf.json` 将 `frontendDist` 指向 `../out`，并在 Tauri 命令前自动执行 `pnpm dev` / `pnpm build`。
-- `src-tauri/src/lib.rs` 在 debug 模式启用 `tauri-plugin-log`。
 
 ## 开发前置要求
 
@@ -114,14 +109,6 @@ sast-link-next/
 
 - Node.js 20 或更高版本
 - pnpm，建议与 CI 对齐使用 pnpm 10
-
-### 桌面开发额外需要
-
-- Rust toolchain
-- Tauri 平台依赖
-  - Windows：Visual Studio C++ Build Tools 与可用的 WebView2 环境
-  - macOS：Xcode Command Line Tools
-  - Linux：与 `.github/workflows/build-tauri.yml` 中一致的 WebKitGTK 等依赖
 
 ## 安装与环境变量
 
@@ -147,15 +134,12 @@ NEXT_PUBLIC_API_MOCKING=false
 | 命令 | 说明 |
 | --- | --- |
 | `pnpm dev` | 启动 Next.js Web 开发服务器 |
-| `pnpm build` | 生成供 Tauri 生产环境使用的静态导出 |
+| `pnpm build` | 生成 `out/` 静态导出 |
 | `pnpm start` | 启动 Next.js 生产服务器 |
 | `pnpm lint` | 运行 ESLint |
 | `pnpm test` | 运行 Jest 测试 |
 | `pnpm test:watch` | 监听模式运行 Jest |
 | `pnpm test:coverage` | 生成覆盖率报告 |
-| `pnpm tauri dev` | 启动桌面开发模式 |
-| `pnpm tauri build` | 构建桌面安装包 / Bundle |
-| `pnpm tauri info` | 检查本机 Tauri 环境 |
 
 ## 推荐本地流程
 
@@ -173,21 +157,12 @@ pnpm dev
 - `/reset`
 - `/home`
 
-### 做桌面开发
-
-```bash
-pnpm tauri dev
-```
-
-这个命令会先启动 Next.js，再打开 Tauri 桌面窗口。
-
 ### 提交前验证
 
 ```bash
 pnpm lint
 pnpm test
 pnpm build
-pnpm tauri build
 ```
 
 ## 测试现状
@@ -210,10 +185,9 @@ pnpm tauri build
 
 仓库已经有完整的 GitHub Actions 配置：
 
-- `ci.yml` 在 `master` 与 `develop` 的 push / PR 上编排质量检查、测试和 Tauri 构建。
+- `ci.yml` 在 `master` 与 `develop` 的 push / PR 上编排质量检查和测试。
 - `quality.yml` 执行 lint、`tsc --noEmit`、`pnpm audit`、`pnpm outdated`。
 - `test.yml` 执行 `pnpm test:coverage`、上传测试与覆盖率产物，并执行 `pnpm build`。
-- `build-tauri.yml` 构建 Linux / Windows / macOS 的未签名桌面产物。
 - `deploy.yml` 已存在，但默认关闭。
 - `release.yml` 在推送 `v*` tag 时创建 draft GitHub Release。
 
@@ -223,7 +197,6 @@ pnpm tauri build
 
 - `package.json` 里的 npm 包名目前仍是 `react-quick-starter`，但应用界面、路由和页面 metadata 已经是 SAST Link 语义。
 - `app/layout.tsx` 当前 metadata 为 `title: "SAST Link"`、`description: "OAuth of SAST"`。
-- `src-tauri/tauri.conf.json` 里的 `productName` 和 `identifier` 仍保留 starter 风格命名；如果后续修改，这份文档也应同步更新。
 
 ## 相关文档
 

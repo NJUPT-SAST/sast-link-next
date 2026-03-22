@@ -2,7 +2,7 @@
 
 ## Project Architecture
 
-This is the active SAST Link Next application, implemented as a Next.js 16 + Tauri v2 hybrid project.
+This is the active SAST Link Next application, implemented as a Next.js 16 web project.
 
 Core stack:
 
@@ -10,7 +10,6 @@ Core stack:
 - UI primitives: shadcn/ui-style components in `components/ui/`
 - State management: Zustand
 - Data access: Axios and SWR
-- Desktop wrapper: Tauri 2
 - Tests: Jest 30 + Testing Library + MSW
 
 ## Product Structure
@@ -43,13 +42,7 @@ Core stack:
 ## Runtime Model
 
 1. Web mode: `pnpm dev`
-2. Desktop mode: `pnpm tauri dev`
-
-Important:
-
-- `next.config.ts` already uses `output: "export"`
-- `src-tauri/tauri.conf.json` expects `../out`
-- production desktop packaging depends on `pnpm build`
+2. Production static export: `pnpm build`
 
 ## Developer Workflows
 
@@ -67,9 +60,6 @@ Useful commands:
 - `pnpm test`
 - `pnpm test:watch`
 - `pnpm test:coverage`
-- `pnpm tauri dev`
-- `pnpm tauri build`
-- `pnpm tauri info`
 
 ### Code quality
 
@@ -105,7 +95,7 @@ import { Button } from "@/components/ui/button";
 - When updating auth behavior, inspect both API wrappers and Zustand stores.
 - When updating homepage behavior, inspect side-panel state and `use-fetch-profile`.
 - When updating avatar/profile editing, account for the existing slider + mouse-wheel zoom behavior.
-- When changing build behavior, keep Next static export and Tauri `frontendDist` in sync.
+- When changing build behavior, keep the static-export assumptions in docs and CI in sync.
 
 ## Configuration Notes
 

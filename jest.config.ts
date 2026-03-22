@@ -222,7 +222,6 @@ const config: Config = {
     "/node_modules/",
     "/.next/",
     "/out/",
-    "/src-tauri/",
   ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files

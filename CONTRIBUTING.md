@@ -11,12 +11,6 @@ pnpm install
 pnpm dev
 ```
 
-If your change touches desktop behavior, also verify:
-
-```bash
-pnpm tauri info
-```
-
 ## Branching
 
 The current CI workflows are wired for `master` and `develop`, and the local repository is presently on `master`.
@@ -47,7 +41,6 @@ Key areas to understand before changing behavior:
 - `app/(user)` for authenticated flows
 - `lib/api` for backend integration
 - `store/` for Zustand state
-- `src-tauri/` for desktop packaging and runtime shell
 
 ### Follow current conventions
 
@@ -65,12 +58,6 @@ Key areas to understand before changing behavior:
 pnpm lint
 pnpm test
 pnpm build
-```
-
-### When touching desktop or release packaging
-
-```bash
-pnpm tauri build
 ```
 
 ### For documentation-only changes
@@ -121,7 +108,6 @@ Update docs when you change:
 - environment variables
 - build or test commands
 - CI behavior
-- Tauri packaging behavior
 
 Primary documentation files:
 
@@ -140,20 +126,6 @@ If you add or change behavior:
 - avoid weakening coverage or CI thresholds without documenting the reason
 
 See [TESTING.md](./TESTING.md) for the current test setup.
-
-## Desktop-Specific Notes
-
-The application currently uses:
-
-- `next.config.ts` with static export
-- `src-tauri/tauri.conf.json` with `frontendDist: "../out"`
-- `pnpm tauri dev` and `pnpm tauri build` as the supported entry points
-
-If you change any of those assumptions, update:
-
-- Tauri config
-- relevant workflow files
-- README / CI docs
 
 ## Issues and Follow-up
 

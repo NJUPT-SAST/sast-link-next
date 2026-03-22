@@ -30,7 +30,7 @@ Important current config details:
   - functions: 60
   - lines: 70
   - statements: 70
-- Tests ignore `.next/`, `out/`, `node_modules/`, and `src-tauri/`.
+- Tests ignore `.next/`, `out/`, and `node_modules/`.
 - Path alias `@/` is mapped to the repository root.
 
 ## Available Commands
@@ -175,15 +175,6 @@ pnpm lint
 pnpm build
 ```
 
-For behavior touching desktop packaging or Tauri config:
-
-```bash
-pnpm test
-pnpm lint
-pnpm build
-pnpm tauri build
-```
-
 ## Troubleshooting
 
 ### Tests fail because of stale build artifacts
@@ -207,7 +198,3 @@ Remember:
 
 - `collectCoverage` is off in base config
 - `pnpm test:coverage` is the command that turns on coverage collection for normal workflows
-
-### Tauri code is not covered
-
-That is expected in the current setup. Jest ignores `src-tauri/`, so Rust-side logic must be validated separately with Rust tooling if native code grows beyond today’s small shell wrapper.
