@@ -18,6 +18,22 @@ if (!HTMLElement.prototype.releasePointerCapture) {
   HTMLElement.prototype.releasePointerCapture = () => {};
 }
 
+if (!window.matchMedia) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+}
+
 type MockNextImageProps = React.ComponentPropsWithoutRef<'img'> & {
   priority?: boolean;
   fill?: boolean;

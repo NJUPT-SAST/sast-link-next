@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 
-const useSWR = jest.fn();
+const mockSWR = jest.fn();
 const getUserProfile = jest.fn();
 const getToken = jest.fn();
 const setProfile = jest.fn();
@@ -9,7 +9,7 @@ const updateAccount = jest.fn();
 
 jest.mock("swr", () => ({
   __esModule: true,
-  default: (...args: unknown[]) => useSWR(...args),
+  default: (...args: unknown[]) => mockSWR(...args),
 }));
 
 jest.mock("@/lib/api/user", () => ({
@@ -39,7 +39,7 @@ import { useFetchProfile } from "./use-fetch-profile";
 
 describe("useFetchProfile", () => {
   beforeEach(() => {
-    useSWR.mockReset();
+    mockSWR.mockReset();
     getUserProfile.mockReset();
     getToken.mockReset();
     setProfile.mockReset();
@@ -49,17 +49,17 @@ describe("useFetchProfile", () => {
 
   it("disables SWR fetching when there is no token", () => {
     getToken.mockReturnValue(null);
-    useSWR.mockReturnValue({ data: undefined });
+    mockSWR.mockReturnValue({ data: undefined });
 
     renderHook(() => useFetchProfile());
 
-    expect(useSWR).toHaveBeenCalledWith(
+    expect(mockSWR).toHaveBeenCalledWith(
       expect.any(Function),
       expect.any(Function),
       { revalidateOnFocus: false },
     );
 
-    const keyFactory = useSWR.mock.calls[0][0] as () => string | null;
+    const keyFactory = mockSWR.mock.calls[0][0] as () => string | null;
     expect(keyFactory()).toBeNull();
   });
 
@@ -83,17 +83,22 @@ describe("useFetchProfile", () => {
         Data: profile,
       },
     });
-    useSWR.mockImplementation((keyFactory, fetcher, options) => ({
+    mockSWR.mockImplementation((keyFactory, fetcher, options) => ({
       key: keyFactory(),
       fetcher,
       options,
     }));
 
     const { result } = renderHook(() => useFetchProfile());
-    const data = await result.current.fetcher();
+    const mockedSWRResult = result.current as unknown as {
+      key: string | null;
+      fetcher: () => Promise<typeof profile>;
+      options: { revalidateOnFocus: false };
+    };
+    const data = await mockedSWRResult.fetcher();
 
-    expect(result.current.key).toBe("getProfile");
-    expect(result.current.options).toEqual({ revalidateOnFocus: false });
+    expect(mockedSWRResult.key).toBe("getProfile");
+    expect(mockedSWRResult.options).toEqual({ revalidateOnFocus: false });
     expect(data).toEqual(profile);
     expect(setProfile).toHaveBeenCalledWith(profile);
     expect(setCurrentUser).toHaveBeenCalledWith({
@@ -115,14 +120,17 @@ describe("useFetchProfile", () => {
         Data: null,
       },
     });
-    useSWR.mockImplementation((keyFactory, fetcher) => ({
+    mockSWR.mockImplementation((keyFactory, fetcher) => ({
       key: keyFactory(),
       fetcher,
     }));
 
     const { result } = renderHook(() => useFetchProfile());
+    const mockedSWRResult = result.current as unknown as {
+      fetcher: () => Promise<unknown>;
+    };
 
-    await expect(result.current.fetcher()).rejects.toThrow(
+    await expect(mockedSWRResult.fetcher()).rejects.toThrow(
       "Failed to fetch profile",
     );
     expect(setProfile).not.toHaveBeenCalled();

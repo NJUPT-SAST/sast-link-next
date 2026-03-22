@@ -22,7 +22,10 @@ const config: Config = {
   collectCoverageFrom: [
     "app/**/*.{js,jsx,ts,tsx}",
     "components/**/*.{js,jsx,ts,tsx}",
+    "hooks/**/*.{js,jsx,ts,tsx}",
     "lib/**/*.{js,jsx,ts,tsx}",
+    "store/**/*.{js,jsx,ts,tsx}",
+    "!components/ui/**/*.{js,jsx,ts,tsx}",
     "!**/*.d.ts",
     "!**/node_modules/**",
     "!**/.next/**",

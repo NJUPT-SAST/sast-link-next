@@ -8,7 +8,7 @@
  * @see https://mswjs.io/docs/faq#requestresponsetextencoder-is-not-defined-jest
  */
 
-const { TextDecoder, TextEncoder } = require("node:util");
+import { TextDecoder, TextEncoder } from "node:util";
 
 // Capture Node built-in fetch globals before jsdom can remove them
 const nodeGlobals = {

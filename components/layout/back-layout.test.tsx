@@ -25,6 +25,7 @@ describe("BackLayout", () => {
       String(element.className).includes("sm:hidden"),
     )?.firstElementChild as HTMLDivElement | null;
 
-    expect(mobileGradient.className).toContain("#20afff");
+    expect(mobileGradient).not.toBeNull();
+    expect((mobileGradient as HTMLDivElement).className).toContain("#20afff");
   });
 });

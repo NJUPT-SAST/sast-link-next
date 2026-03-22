@@ -14,6 +14,12 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "src-tauri/target/**",
     "next-env.d.ts",
+    // Generated artifacts of the workspace docs app.
+    "docs/.next/**",
+    "docs/.source/**",
+    "docs/out/**",
+    // Historical migration snapshots are not part of the active app surface.
+    "tmp/**",
   ]),
 ]);
 

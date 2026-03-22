@@ -1,5 +1,17 @@
 import { profileRules } from "./profile";
 
+type LinkPatternRule = {
+  value: RegExp;
+  message: string;
+};
+
+function asPatternRule(rule: unknown): LinkPatternRule {
+  if (!rule || rule instanceof RegExp) {
+    throw new Error("Expected RegisterOptions pattern object");
+  }
+  return rule as LinkPatternRule;
+}
+
 describe("profileRules", () => {
   it("requires nickname and limits text lengths", () => {
     expect(profileRules.nickname.required).toBe("昵称不能为空");
@@ -14,13 +26,15 @@ describe("profileRules", () => {
   });
 
   it("accepts empty links and http/https urls, but rejects invalid links", () => {
-    const linkPattern = profileRules.link1.pattern?.value;
+    const link1Pattern = asPatternRule(profileRules.link1.pattern);
+    const link2Pattern = asPatternRule(profileRules.link2.pattern);
+    const link3Pattern = asPatternRule(profileRules.link3.pattern);
 
-    expect(linkPattern?.test("")).toBe(true);
-    expect(linkPattern?.test("https://example.com")).toBe(true);
-    expect(linkPattern?.test("http://example.com")).toBe(true);
-    expect(linkPattern?.test("ftp://example.com")).toBe(false);
-    expect(profileRules.link2.pattern?.message).toBe("请输入有效的URL");
-    expect(profileRules.link3.pattern?.message).toBe("请输入有效的URL");
+    expect(link1Pattern.value.test("")).toBe(true);
+    expect(link1Pattern.value.test("https://example.com")).toBe(true);
+    expect(link1Pattern.value.test("http://example.com")).toBe(true);
+    expect(link1Pattern.value.test("ftp://example.com")).toBe(false);
+    expect(link2Pattern.message).toBe("请输入有效的URL");
+    expect(link3Pattern.message).toBe("请输入有效的URL");
   });
 });
