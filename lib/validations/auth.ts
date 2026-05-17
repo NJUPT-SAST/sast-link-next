@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 
-const studentIdPattern = /^\d{9}$/;
+const studentIdPattern = /^[A-Za-z]\d{8}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const verificationCodePattern = /^\d{5}$/;
 const strongPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
@@ -20,7 +20,7 @@ export const registerStudentIdSchema = z
   .string()
   .trim()
   .min(1, "学号不可为空")
-  .regex(studentIdPattern, "请输入 9 位学号");
+  .regex(studentIdPattern, "请输入正确的学号");
 
 export const verificationCodeSchema = z
   .string()

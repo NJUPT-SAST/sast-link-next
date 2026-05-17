@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+coverage
+.git
+.gitignore
+*.md
+!README.md
+.env*
+!.env.example
+docs
+tmp

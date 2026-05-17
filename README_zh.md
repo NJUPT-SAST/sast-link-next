@@ -129,6 +129,16 @@ NEXT_PUBLIC_API_MOCKING=false
 - 将 `NEXT_PUBLIC_API_MOCKING=true` 后，`app/providers.tsx` 会动态初始化 MSW。
 - 当前 `.env.example` 只记录了这两个公开变量。
 
+通过容器构建/部署时可以在构建阶段注入后台地址，例如：
+
+```bash
+# 使用 docker-compose（在 compose 中设置 NEXT_PUBLIC_API_BASE_URL）
+docker-compose build
+
+# 或者直接在 docker build 时传入构建参数
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.com -t sast-link-next:latest .
+```
+
 ## 常用命令
 
 | 命令 | 说明 |
