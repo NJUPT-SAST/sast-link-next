@@ -1,6 +1,10 @@
 :80 {
-	handle /apis* {
-		reverse_proxy {$BACKEND_URL}
+	@api {
+		path /verify/* /sendEmail* /user/* /profile/* /oauth2/* /login/lark/* /login/github/*
+	}
+	handle @api {
+		rewrite * /apis{path}
+		reverse_proxy {env.BACKEND_URL}
 	}
 
 	root * /var/www
@@ -11,5 +15,6 @@
 	encode gzip
 	log {
 		output stdout
+		level INFO
 	}
 }
