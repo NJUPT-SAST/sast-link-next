@@ -1,11 +1,5 @@
 :80 {
-	@api {
-		path /verify/* /sendEmail* /user/* /profile/* /oauth2/* /login/lark/* /login/github/*
-	}
-	handle @api {
-		rewrite * /apis{path}
-		reverse_proxy {env.BACKEND_URL}
-	}
+	reverse_proxy /apis/* {env.BACKEND_URL}
 
 	root * /var/www
 	file_server {
