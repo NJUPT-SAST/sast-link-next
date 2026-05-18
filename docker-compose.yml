@@ -1,5 +1,6 @@
 services:
   sast-link-next:
+    image: sast/sast-link-next:current
     build:
       context: .
       args:
