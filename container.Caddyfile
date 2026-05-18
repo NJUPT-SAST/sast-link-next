@@ -1,4 +1,8 @@
 :80 {
+	handle /apis* {
+		reverse_proxy {$BACKEND_URL}
+	}
+
 	root * /var/www
 	file_server {
 		index index.html

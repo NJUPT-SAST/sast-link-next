@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Build-time env vars - override via --build-arg or compose args
 # Use ARG so callers can inject values via `--build-arg` or docker-compose build args.
-ARG NEXT_PUBLIC_API_BASE_URL=https://link.sast.fun/apis
+ARG NEXT_PUBLIC_API_BASE_URL=
 ARG NEXT_PUBLIC_API_MOCKING=false
 # Expose the build args as ENV for the runtime image layer that follows the build
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
