@@ -8,8 +8,9 @@ import {
 
 describe("auth validation schemas", () => {
   it("accepts student ids or emails for login accounts", () => {
-    expect(loginAccountSchema.safeParse("123456789").success).toBe(true);
+    expect(loginAccountSchema.safeParse("B12345678").success).toBe(true);
     expect(loginAccountSchema.safeParse("student@njupt.edu.cn").success).toBe(true);
+    expect(loginAccountSchema.safeParse("123456789").success).toBe(false);
     expect(loginAccountSchema.safeParse("bad account").success).toBe(false);
   });
 
@@ -19,8 +20,9 @@ describe("auth validation schemas", () => {
     expect(loginPasswordSchema.safeParse(" ").success).toBe(false);
   });
 
-  it("requires a 9 digit student id and stronger matching passwords for registration", () => {
-    expect(registerStudentIdSchema.safeParse("123456789").success).toBe(true);
+  it("requires a letter-prefixed 8 digit student id and stronger matching passwords for registration", () => {
+    expect(registerStudentIdSchema.safeParse("B12345678").success).toBe(true);
+    expect(registerStudentIdSchema.safeParse("123456789").success).toBe(false);
     expect(registerStudentIdSchema.safeParse("1234").success).toBe(false);
 
     expect(
