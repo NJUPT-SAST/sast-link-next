@@ -1,7 +1,5 @@
 :80 {
-	handle /apis* {
-		reverse_proxy {$BACKEND_URL}
-	}
+	reverse_proxy /apis/* {env.BACKEND_URL}
 
 	root * /var/www
 	file_server {
@@ -11,5 +9,6 @@
 	encode gzip
 	log {
 		output stdout
+		level INFO
 	}
 }
