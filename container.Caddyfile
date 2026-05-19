@@ -6,7 +6,7 @@
 	}
 
 	handle /apis/* {
-		reverse_proxy {env.BACKEND_URL}
+		reverse_proxy https://link.sast.fun
 	}
 
 	handle {
