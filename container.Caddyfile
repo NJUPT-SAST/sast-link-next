@@ -6,7 +6,9 @@
 	}
 
 	handle /apis/* {
-		reverse_proxy {env.BACKEND_URL}
+		reverse_proxy {
+			to {env.BACKEND_URL}
+		}
 	}
 
 	handle {
