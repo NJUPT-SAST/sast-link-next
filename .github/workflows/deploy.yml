@@ -48,6 +48,7 @@ jobs:
 
       - name: Transfer image to server
         uses: appleboy/scp-action@master
+        timeout-minutes: 30
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -57,6 +58,7 @@ jobs:
 
       - name: Transfer compose file to server
         uses: appleboy/scp-action@master
+        timeout-minutes: 3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -66,6 +68,7 @@ jobs:
 
       - name: Execute deployment script on server
         uses: appleboy/ssh-action@master
+        timeout-minutes: 15
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
@@ -77,6 +80,9 @@ jobs:
             IMAGE_NAME="${{ env.REGISTRY_PREFIX }}/${{ env.SERVICE_NAME }}"
             TAR_FILE="${{ env.TAR_FILE_NAME }}"
             NEW_VERSION_TAG="${{ steps.vars.outputs.sha_short }}"
+            CONTAINER_NAME="${{ env.SERVICE_NAME }}"
+            HEALTH_CHECK_RETRIES=20
+            HEALTH_CHECK_INTERVAL=3
 
             cd ${SERVICE_DIR}
 
@@ -103,9 +109,36 @@ jobs:
             echo "starting services with docker compose..."
             docker compose up -d --remove-orphans
 
+            echo "waiting for container to become healthy..."
+            HEALTHY=0
+            for i in $(seq 1 ${HEALTH_CHECK_RETRIES}); do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' ${CONTAINER_NAME} 2>/dev/null || echo "starting")
+              if [ "$STATUS" = "healthy" ]; then
+                HEALTHY=1
+                echo "  container is healthy"
+                break
+              fi
+              echo "  attempt $i/${HEALTH_CHECK_RETRIES}: status=$STATUS, waiting ${HEALTH_CHECK_INTERVAL}s..."
+              sleep ${HEALTH_CHECK_INTERVAL}
+            done
+
+            if [ "$HEALTHY" -eq 0 ]; then
+              echo "ERROR: container failed to become healthy, rolling back..."
+              if docker image inspect "${IMAGE_NAME}:backup" >/dev/null 2>&1; then
+                echo "  - tagging backup as current..."
+                docker tag "${IMAGE_NAME}:backup" "${IMAGE_NAME}:current"
+                docker compose up -d --remove-orphans
+                echo "  - rollback complete"
+              else
+                echo "  - no backup image available, manual intervention required"
+              fi
+              rm -f ${TAR_FILE}
+              exit 1
+            fi
+
             echo "cleaning up temporary files and images..."
             rm ${TAR_FILE}
-            docker rmi "${IMAGE_NAME}:latest"
-            docker image prune -f
+            docker rmi "${IMAGE_NAME}:latest" 2>/dev/null || true
+            docker images --filter "dangling=true" --format "{{.ID}}" | xargs -r docker rmi 2>/dev/null || true
 
             echo "deploy success! running version: ${NEW_VERSION_TAG}"
