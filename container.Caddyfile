@@ -1,14 +1,19 @@
 :80 {
-	reverse_proxy /apis/* {env.BACKEND_URL}
-
-	root * /var/www
-	file_server {
-		index index.html
-	}
-	try_files {path} {path}/index.html /index.html
 	encode gzip
 	log {
 		output stdout
 		level INFO
+	}
+
+	handle /apis/* {
+		reverse_proxy {env.BACKEND_URL}
+	}
+
+	handle {
+		root * /var/www
+		file_server {
+			index index.html
+		}
+		try_files {path} {path}/index.html /index.html
 	}
 }
