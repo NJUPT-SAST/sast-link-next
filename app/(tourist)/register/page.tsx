@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
 
   const nextStep = useCallback(() => setStep((s) => s + 1), []);
+  const prevStep = useCallback(() => setStep((s) => s - 1), []);
 
   return (
     <AuthShell
@@ -38,6 +39,7 @@ export default function RegisterPage() {
               ticket={registerTicket}
               onTicket={setRegisterTicket}
               onNext={nextStep}
+              onBack={prevStep}
             />
           </PageTransition>
         )}
@@ -46,6 +48,7 @@ export default function RegisterPage() {
             <RegisterStep3
               ticket={registerTicket}
               onNext={nextStep}
+              onBack={prevStep}
             />
           </PageTransition>
         )}

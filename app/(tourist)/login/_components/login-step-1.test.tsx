@@ -30,4 +30,15 @@ describe("LoginStep1", () => {
     expect(verifyLoginAccount).not.toHaveBeenCalled();
     expect(screen.getByText("请输入学号或邮箱")).toBeInTheDocument();
   });
+
+  it("offers only GitHub and Feishu as third-party logins", () => {
+    render(<LoginStep1 onNext={jest.fn()} />);
+
+    expect(screen.getByTitle("Github")).toBeInTheDocument();
+    expect(screen.getByTitle("Feishu")).toBeInTheDocument();
+    expect(screen.queryByTitle("QQ")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Microsoft")).not.toBeInTheDocument();
+    // Feishu moved into the icon row; the old text link is gone.
+    expect(screen.queryByText("SAST 飞书登录")).not.toBeInTheDocument();
+  });
 });

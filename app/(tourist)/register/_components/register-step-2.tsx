@@ -26,6 +26,7 @@ interface Props {
   ticket: string;
   onTicket: (ticket: string) => void;
   onNext: () => void;
+  onBack: () => void;
 }
 
 export default function RegisterStep2({
@@ -33,6 +34,7 @@ export default function RegisterStep2({
   ticket,
   onTicket,
   onNext,
+  onBack,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const form = useForm<VerificationCodeFormValues>({
@@ -118,6 +120,14 @@ export default function RegisterStep2({
             className="h-[42px] w-[314px] rounded-[10px] border-[3px] border-[#1c1f23] text-base font-semibold sm:text-xl"
           >
             {loading ? <DotLoading /> : "下一步"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="h-[42px] w-[314px] rounded-[10px] border-[3px] border-primary bg-background text-base font-semibold text-foreground hover:bg-accent sm:text-xl"
+          >
+            返回上一步
           </Button>
         </Footer>
       </form>

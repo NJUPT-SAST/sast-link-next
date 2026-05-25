@@ -22,7 +22,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { OtherLoginList } from "@/components/auth/other-login-list";
-import { GithubIcon, QqIcon, MsIcon } from "@/components/icons/brand-icons";
+import { GithubIcon, LarkIcon } from "@/components/icons/brand-icons";
 import { PageTransition } from "@/components/animation/page-transition";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -51,8 +51,14 @@ export default function LoginStep1({ onNext }: LoginStep1Props) {
         describe: "Github",
         icon: <GithubIcon />,
       },
-      { target: "", describe: "QQ", icon: <QqIcon /> },
-      { target: "", describe: "Microsoft", icon: <MsIcon /> },
+      {
+        target:
+          typeof window !== "undefined"
+            ? `${API_BASE}/login/lark?redirect_url=${window.location.protocol}//${window.location.host}/callback/feishu`
+            : "",
+        describe: "Feishu",
+        icon: <LarkIcon />,
+      },
     ],
     [],
   );
@@ -113,7 +119,12 @@ export default function LoginStep1({ onNext }: LoginStep1Props) {
                     忘记密码
                   </Link>
                 </div>
-                <FormMessage />
+                {/* Reserve a fixed line so the error message does not shift
+                    the button down (the layout jump left a ghost of the
+                    button behind the framer-motion transform layer). */}
+                <div className="min-h-5">
+                  <FormMessage />
+                </div>
               </FormItem>
             )}
           />
@@ -134,21 +145,7 @@ export default function LoginStep1({ onNext }: LoginStep1Props) {
         </form>
       </Form>
 
-      {!isOAuthBinding && (
-        <>
-          <a
-            href={
-              typeof window !== "undefined"
-                ? `${API_BASE}/login/lark?redirect_url=${window.location.protocol}//${window.location.host}/callback/feishu`
-                : "#"
-            }
-            className="text-sm text-[#1c1f23] hover:underline"
-          >
-            SAST 飞书登录
-          </a>
-          <OtherLoginList list={oauthList} />
-        </>
-      )}
+      {!isOAuthBinding && <OtherLoginList list={oauthList} />}
 
       <div className="text-sm">
         没有账号？

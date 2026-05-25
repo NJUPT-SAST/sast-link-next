@@ -90,6 +90,16 @@ describe("LoginStep2", () => {
     });
   });
 
+  it("calls onBack when the 返回上一步 button is clicked", async () => {
+    const user = userEvent.setup();
+    const onBack = jest.fn();
+
+    render(<LoginStep2 loginTicket="ticket-back" onBack={onBack} />);
+
+    await user.click(screen.getByRole("button", { name: "返回上一步" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
   it("calls onBack when backend asks user to re-enter account", async () => {
     const user = userEvent.setup();
     const onBack = jest.fn();

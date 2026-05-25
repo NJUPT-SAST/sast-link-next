@@ -14,6 +14,7 @@ export default function ResetPage() {
   const [username, setUsername] = useState("");
 
   const nextStep = useCallback(() => setStep((s) => s + 1), []);
+  const prevStep = useCallback(() => setStep((s) => s - 1), []);
 
   return (
     <>
@@ -36,12 +37,13 @@ export default function ResetPage() {
                 ticket={resetTicket}
                 onTicket={setResetTicket}
                 onNext={nextStep}
+                onBack={prevStep}
               />
             </PageTransition>
           )}
           {step === 3 && (
             <PageTransition>
-              <ResetStep3 ticket={resetTicket} onNext={nextStep} />
+              <ResetStep3 ticket={resetTicket} onNext={nextStep} onBack={prevStep} />
             </PageTransition>
           )}
           {step === 4 && (

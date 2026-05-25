@@ -14,6 +14,7 @@ interface Props {
   ticket: string;
   onTicket: (ticket: string) => void;
   onNext: () => void;
+  onBack: () => void;
 }
 
 export default function ResetStep2({
@@ -21,6 +22,7 @@ export default function ResetStep2({
   ticket,
   onTicket,
   onNext,
+  onBack,
 }: Props) {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +94,13 @@ export default function ResetStep2({
           className="flex h-[42px] w-[314px] cursor-pointer items-center justify-center rounded-[10px] border-[3px] border-[#1c1f23] bg-[#1c1f23] text-xl font-semibold text-white disabled:opacity-50"
         >
           {loading ? <DotLoading /> : "下一步"}
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex h-[42px] w-[314px] cursor-pointer items-center justify-center rounded-[10px] border-[3px] border-[#1c1f23] bg-white text-xl font-semibold text-[#1c1f23]"
+        >
+          返回上一步
         </button>
       </Footer>
     </form>

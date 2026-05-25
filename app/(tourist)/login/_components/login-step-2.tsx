@@ -149,7 +149,7 @@ export default function LoginStep2({ loginTicket, onBack }: LoginStep2Props) {
               onClick={onBack}
               className="h-[42px] w-[314px] rounded-[10px] border-[3px] border-primary bg-background text-base font-semibold text-foreground hover:bg-accent sm:text-xl"
             >
-              使用其他账号
+              返回上一步
             </Button>
           </Footer>
         </form>

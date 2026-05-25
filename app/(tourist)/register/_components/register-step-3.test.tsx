@@ -16,7 +16,9 @@ describe("RegisterStep3", () => {
   it("blocks weak passwords and explains the password requirements before submit", async () => {
     const user = userEvent.setup();
 
-    render(<RegisterStep3 ticket="register-ticket" onNext={jest.fn()} />);
+    render(
+      <RegisterStep3 ticket="register-ticket" onNext={jest.fn()} onBack={jest.fn()} />,
+    );
 
     expect(
       screen.getByText("请使用至少 8 位且同时包含字母和数字的密码。"),
